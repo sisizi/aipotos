@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #6366f1;
+  --secondary: #8b5cf6;
+  --accent: #06b6d4;
 }
 
 @theme inline {
@@ -12,15 +15,167 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 自定义动画 */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(99, 102, 241, 0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 30px rgba(99, 102, 241, 0.6);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* 毛玻璃效果 */
+.backdrop-blur-custom {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 流动边框 */
+.flowing-border {
+  position: relative;
+  background: linear-gradient(45deg, #6366f1, #8b5cf6, #06b6d4, #6366f1);
+  background-size: 400% 400%;
+  animation: gradient 3s ease infinite;
+  padding: 2px;
+  border-radius: 12px;
+}
+
+.flowing-border::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: #0a0a0a;
+  border-radius: 10px;
+  z-index: -1;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 扫描按钮样式 */
+.scanning-button {
+  position: relative;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.scanning-button:hover {
+  transform: scale(1.02);
+}
+
+.scanning-button:active {
+  transform: scale(0.98);
+}
+
+/* 闪烁光点动画 */
+@keyframes shimmer-flow {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer-flow-reverse {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* 脉冲光晕动画 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(99, 102, 241, 0.2);
+  }
 }
