@@ -192,7 +192,7 @@ const TestimonialsSection = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-4 h-4" />
-                    <span>喜欢</span>
+                    <span>Like</span>
                   </div>
                 </div>
               </div>

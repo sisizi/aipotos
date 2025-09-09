@@ -101,7 +101,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5" />
-                <span>北京市朝阳区科技园区</span>
+                <span>Chaoyang Tech Park, Beijing</span>
               </div>
             </div>
 
@@ -176,7 +176,7 @@ const Footer = () => {
                 whileTap={{ scale: 0.95 }}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center space-x-2"
               >
-                <span>订阅</span>
+                <span>Subscribe</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
             </div>
@@ -196,7 +196,7 @@ const Footer = () => {
             className="text-gray-400 text-center md:text-left"
           >
             <p className="flex items-center space-x-2">
-              <span>© 2025 AI PhotoGen. 保留所有权利。</span>
+              <span>© 2025 AI PhotoGen. All rights reserved.</span>
               <span className="hidden md:inline">|</span>
               <span className="hidden md:inline">Made with</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
@@ -213,10 +213,10 @@ const Footer = () => {
           >
             <div className="flex items-center space-x-2 text-gray-400">
               <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span>4.9/5 用户评分</span>
+              <span>4.9/5 User Rating</span>
             </div>
             <div className="text-gray-400">
-              <span>50,000+ 满意用户</span>
+              <span>50,000+ Satisfied Users</span>
             </div>
           </motion.div>
         </div>

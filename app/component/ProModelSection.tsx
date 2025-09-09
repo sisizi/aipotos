@@ -75,14 +75,14 @@ const ProModelSection = () => {
       return (
         <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
           <Crown className="w-3 h-3" />
-          <span>MAX</span>
+          <span>Flagship</span>
         </div>
       );
     }
     return (
       <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
         <Zap className="w-3 h-3" />
-        <span>PRO</span>
+        <span>Pro</span>
       </div>
     );
   };
@@ -243,7 +243,7 @@ const ProModelSection = () => {
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-lg transition-all duration-200 flex items-center space-x-2 mx-auto"
             >
-              <span>进入社区</span>
+              <span>Join Community</span>
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           </div>

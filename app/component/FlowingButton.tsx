@@ -22,7 +22,7 @@ const FlowingButton = () => {
         {/* 按钮内容 */}
         <div className="relative z-10">
           <span className="text-cyan-300 text-xl font-mono tracking-wider font-medium">
-            AUGMENT CLI - AUGGIE 现已推出！
+            增强命令行 AUGGIE 现已发布！
           </span>
         </div>
 

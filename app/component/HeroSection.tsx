@@ -13,9 +13,9 @@ const HeroSection = () => {
 
   // 新增：三枚图标的数据定义
   const featureItems = [
-    { id: 'free', label: 'free', bg: 'bg-gradient-to-br from-sky-400 to-blue-600', content: '⌘' },
-    { id: 'pro', label: 'pro', bg: 'bg-gradient-to-br from-orange-400 via-pink-500 to-fuchsia-600', content: '▁' },
-    { id: 'max', label: 'max', bg: 'bg-gradient-to-br from-indigo-400 to-violet-500', content: '›_' },
+    { id: 'free', label: '免费版', bg: 'bg-gradient-to-br from-sky-400 to-blue-600', content: '⌘' },
+    { id: 'pro', label: '专业版', bg: 'bg-gradient-to-br from-orange-400 via-pink-500 to-fuchsia-600', content: '▁' },
+    { id: 'max', label: '旗舰版', bg: 'bg-gradient-to-br from-indigo-400 to-violet-500', content: '›_' },
   ];
 
   // 选中状态（单选）
@@ -45,7 +45,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl md:text-7xl font-extrabold text-white mb-6"
         >
-          <span className="gradient-text">AI图像生成</span>
+          <span className="gradient-text">AI Image Generation</span>
         </motion.h1>
 
         {/* 一句话简介（小字体，文字从左到右闪动），容器透明且无边框 */}
@@ -66,7 +66,7 @@ const HeroSection = () => {
           className="flex justify-center"
         >
           <div className="group flex items-center gap-6 px-8 py-5 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md shadow-sm hover:border-amber-200/70 hover:bg-white/10 transition-colors duration-300">
-            <span className="text-white/90 text-xl font-semibold">立即使用</span>
+            <span className="text-white/90 text-xl font-semibold">Get Started</span>
             <span className="h-8 w-px bg-white/15" />
             <div className="flex items-center gap-4">
               {featureItems.map(item => {

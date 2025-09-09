@@ -60,7 +60,7 @@ const Header = () => {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">AI</span>
             </div>
-            <span className="text-white text-2xl font-bold">PhotoGen</span>
+            <span className="text-white text-2xl font-bold">AI Art Studio</span>
           </motion.div>
 
           {/* Desktop Navigation */}
@@ -86,7 +86,7 @@ const Header = () => {
 
               <button className="flex items-center space-x-1 text-white hover:text-blue-300 transition-colors text-xl">
                 <Globe className="w-4 h-4" />
-                <span>中文</span>
+                <span>Chinese</span>
               </button>
 {/* 一个隐藏在父元素下方、右对齐的下拉菜单容器，平时不可见，当用户悬停在父元素上时，会以淡入方式平滑显示出来。 */}
               <div className="absolute top-full right-0 mt-2 w-32 bg-black/90 backdrop-blur-custom rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -120,14 +120,14 @@ const Header = () => {
               whileTap={{ scale: 0.95 }}
               className="text-white hover:text-blue-300 transition-colors text-lg"
             >
-              Sign In
+              登录
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 text-lg"
             >
-              Sign Up
+              注册
             </motion.button>
           </div>
 
@@ -166,10 +166,10 @@ const Header = () => {
             ))}
             <div className="pt-4 border-t border-white/20 space-y-2">
               <button className="block w-full text-left text-white hover:text-blue-300 transition-colors">
-                注册
+                登录
               </button>
               <button className="block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full">
-                登录
+                注册
               </button>
             </div>
           </div>

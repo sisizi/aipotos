@@ -114,7 +114,7 @@ const VideoSection = () => {
             >
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 探索AI生成的
-                <span className="gradient-text"> 无限可能</span>
+                <span className="gradient-text"> Infinite Possibilities</span>
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed">
                 从概念到现实，只需几秒钟。我们的AI模型能够理解您的创意描述，

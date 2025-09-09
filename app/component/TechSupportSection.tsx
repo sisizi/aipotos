@@ -224,21 +224,13 @@ const TechSupportSection = () => {
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-xl text-white">
                       {feature.icon}
                     </div>
-                    <div className="flex-1">
-                      <h4 className="text-xl font-bold text-white mb-2">
-                        {feature.title}
-                      </h4>
-                      <p className="text-gray-300 text-sm mb-3">
-                        {feature.description}
-                      </p>
-                      <div className="space-y-1">
-                        {feature.features.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                            <span className="text-gray-400 text-sm">{item}</span>
-                          </div>
-                        ))}
-                      </div>
+                    <div>
+                      <h4 className="text-xl font-semibold text-white mb-1">{feature.title}</h4>
+                      <p className="text-gray-300">{feature.description}</p>
+                      <button className="mt-2 text-blue-400 hover:text-blue-300 transition-colors flex items-center space-x-1">
+                        <span>View Docs</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </motion.div>
