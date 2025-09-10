@@ -4,18 +4,18 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const HeroSection = () => {
-  const [currentText, setCurrentText] = useState(0);
+  const [, setCurrentText] = useState(0);
   
   const texts = [
-    "瞬间生成，",
-    "无限想象。"
+    "Generate instantly,",
+    "Imagine infinitely."
   ];
 
   // 新增：三枚图标的数据定义
   const featureItems = [
-    { id: 'free', label: '免费版', bg: 'bg-gradient-to-br from-sky-400 to-blue-600', content: '⌘' },
-    { id: 'pro', label: '专业版', bg: 'bg-gradient-to-br from-orange-400 via-pink-500 to-fuchsia-600', content: '▁' },
-    { id: 'max', label: '旗舰版', bg: 'bg-gradient-to-br from-indigo-400 to-violet-500', content: '›_' },
+    { id: 'free', label: 'Free', bg: 'bg-gradient-to-br from-sky-400 to-blue-600', content: '⌘' },
+    { id: 'pro', label: 'Pro', bg: 'bg-gradient-to-br from-orange-400 via-pink-500 to-fuchsia-600', content: '▁' },
+    { id: 'max', label: 'Max', bg: 'bg-gradient-to-br from-indigo-400 to-violet-500', content: '›_' },
   ];
 
   // 选中状态（单选）
@@ -26,7 +26,7 @@ const HeroSection = () => {
       setCurrentText((prev) => (prev + 1) % texts.length);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [texts.length]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 pt-20">
@@ -55,7 +55,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-lg md:text-xl font-extrabold text-white mb-6 "
         >
-          用AI一键生成高质量图像，释放你的创造力，让每一刻灵感成真。
+          Generate high-quality images with AI in one click, unleash your creativity, and bring every inspiration to life.
         </motion.p>
 
         {/* CTA 卡片：Install now + 三图标 */}

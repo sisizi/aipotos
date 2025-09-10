@@ -6,7 +6,6 @@ import ProModelSection from './component/ProModelSection';
 import TechSupportSection from './component/TechSupportSection';
 import TestimonialsSection from './component/TestimonialsSection';
 import Footer from './component/Footer';
-import FlowingButton from './component/FlowingButton';
 
 export default function Home() {
   return (

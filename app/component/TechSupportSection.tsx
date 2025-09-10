@@ -9,11 +9,9 @@ import {
   Cloud, 
   Database, 
   Layers,
-  CheckCircle,
   ArrowRight,
   Terminal,
-  Code,
-  Server
+  Code
 } from 'lucide-react';
 
 const TechSupportSection = () => {
@@ -53,39 +51,39 @@ const TechSupportSection = () => {
   const techFeatures = [
     {
       icon: <Cpu className="w-8 h-8" />,
-      title: "先进AI模型",
-      description: "基于最新的深度学习技术，支持多种生成模式",
+      title: "Advanced AI Models",
+      description: "Based on the latest deep learning technology, supporting multiple generation modes",
       features: ["GPT-4 Vision", "DALL-E 3", "Stable Diffusion XL", "Midjourney V6"]
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "极速生成",
-      description: "优化的算法架构，确保快速响应和高质量输出",
-      features: ["2-5秒生成", "批量处理", "实时预览", "智能缓存"]
+      title: "Lightning Fast Generation",
+      description: "Optimized algorithm architecture ensuring fast response and high-quality output",
+      features: ["2-5s Generation", "Batch Processing", "Real-time Preview", "Smart Caching"]
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "安全可靠",
-      description: "企业级安全保障，保护您的数据和隐私",
-      features: ["端到端加密", "数据隔离", "隐私保护", "合规认证"]
+      title: "Secure & Reliable",
+      description: "Enterprise-grade security protection for your data and privacy",
+      features: ["End-to-End Encryption", "Data Isolation", "Privacy Protection", "Compliance Certification"]
     },
     {
       icon: <Cloud className="w-8 h-8" />,
-      title: "云端处理",
-      description: "强大的云端计算能力，无需本地硬件要求",
-      features: ["弹性扩容", "全球CDN", "99.9%可用性", "自动备份"]
+      title: "Cloud Processing",
+      description: "Powerful cloud computing capabilities without local hardware requirements",
+      features: ["Elastic Scaling", "Global CDN", "99.9% Uptime", "Auto Backup"]
     },
     {
       icon: <Database className="w-8 h-8" />,
-      title: "智能存储",
-      description: "智能化的文件管理和版本控制",
-      features: ["版本历史", "智能分类", "快速检索", "云端同步"]
+      title: "Smart Storage",
+      description: "Intelligent file management and version control",
+      features: ["Version History", "Smart Classification", "Fast Search", "Cloud Sync"]
     },
     {
       icon: <Layers className="w-8 h-8" />,
-      title: "API集成",
-      description: "丰富的API接口，轻松集成到您的应用中",
-      features: ["RESTful API", "Webhook支持", "SDK支持", "文档完善"]
+      title: "API Integration",
+      description: "Rich API interfaces for easy integration into your applications",
+      features: ["RESTful API", "Webhook Support", "SDK Support", "Complete Documentation"]
     }
   ];
 
@@ -118,12 +116,12 @@ const TechSupportSection = () => {
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Terminal className="w-8 h-8 text-green-500" />
             <h2 className="text-4xl md:text-5xl font-bold text-white">
-              技术支持/AI模型支持
+              Technical Support / AI Model Support
             </h2>
             <Terminal className="w-8 h-8 text-green-500" />
           </div>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            基于最先进的人工智能技术，为您的创意提供强大的技术支撑
+            Based on the most advanced artificial intelligence technology, providing powerful technical support for your creativity
           </p>
         </motion.div>
 
@@ -202,10 +200,10 @@ const TechSupportSection = () => {
           >
             <div className="text-center lg:text-left">
               <h3 className="text-3xl font-bold text-white mb-4">
-                强大的技术架构
+                Powerful Technical Architecture
               </h3>
               <p className="text-gray-300 text-lg leading-relaxed">
-                基于最先进的AI技术栈，为您的创意提供专业级的技术支持
+                Based on the most advanced AI technology stack, providing professional-grade technical support for your creativity
               </p>
             </div>
 
@@ -251,7 +249,7 @@ const TechSupportSection = () => {
                 className="bg-gradient-to-r from-green-500 to-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg hover:shadow-green-500/25 transition-all duration-200 flex items-center space-x-2 mx-auto lg:mx-0"
               >
                 <Code className="w-5 h-5" />
-                <span>查看技术文档</span>
+                <span>View Technical Documentation</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
             </motion.div>

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Star, Quote, ChevronLeft, ChevronRight, ThumbsUp, Heart } from 'lucide-react';
+import Image from 'next/image';
 
 const TestimonialsSection = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -12,9 +13,9 @@ const TestimonialsSection = () => {
     {
       id: 1,
       name: "@Designer_Luna",
-      role: "电商设计师",
+      role: "E-commerce Designer",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
-      content: "以前修图调色要花半天，现在用你们AI几分钟搞定！尤其是换背景和智能穿搭推荐，简直是我们电商团队的救命神器——效率翻倍，创意还不受限！",
+      content: "Photo editing and color correction used to take half a day, now with your AI it's done in minutes! Especially background replacement and smart outfit recommendations - it's a lifesaver for our e-commerce team. Efficiency doubled, creativity unlimited!",
       rating: 5,
       likes: 128,
       verified: true
@@ -22,9 +23,9 @@ const TestimonialsSection = () => {
     {
       id: 2,
       name: "@Creative_Max",
-      role: "独立插画师",
+      role: "Independent Illustrator",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-      content: "AI图片生成让我能够快速探索不同的艺术风格，从概念到成品只需要几分钟。这完全改变了我的创作流程，让我能够专注于创意而不是技术细节。",
+      content: "AI image generation allows me to quickly explore different artistic styles, from concept to finished product in just minutes. This completely changed my creative workflow, letting me focus on creativity rather than technical details.",
       rating: 5,
       likes: 95,
       verified: true
@@ -32,9 +33,9 @@ const TestimonialsSection = () => {
     {
       id: 3,
       name: "@Marketing_Sarah",
-      role: "市场营销经理",
+      role: "Marketing Manager",
       avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-      content: "我们团队现在可以快速生成各种营销素材，从社交媒体图片到产品宣传图，质量都很高。客户对我们的创意输出速度赞不绝口！",
+      content: "Our team can now quickly generate various marketing materials, from social media images to product promotional graphics, all with high quality. Clients are amazed by our creative output speed!",
       rating: 5,
       likes: 87,
       verified: true
@@ -42,9 +43,9 @@ const TestimonialsSection = () => {
     {
       id: 4,
       name: "@GameDev_Alex",
-      role: "游戏开发者",
+      role: "Game Developer",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-      content: "游戏概念图生成太棒了！以前需要花大量时间找参考图，现在直接描述想法就能得到高质量的概念图，大大加速了我们的开发流程。",
+      content: "Game concept art generation is amazing! Previously we spent a lot of time finding reference images, now we can directly describe ideas and get high-quality concept art, greatly accelerating our development process.",
       rating: 5,
       likes: 156,
       verified: true
@@ -52,9 +53,9 @@ const TestimonialsSection = () => {
     {
       id: 5,
       name: "@Architect_Emma",
-      role: "建筑设计师",
+      role: "Architectural Designer",
       avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
-      content: "将设计草图转化为逼真的建筑渲染图，让客户能够更直观地理解我们的设计理念。AI技术让建筑可视化变得如此简单高效。",
+      content: "Converting design sketches into realistic architectural renderings helps clients understand our design concepts more intuitively. AI technology makes architectural visualization so simple and efficient.",
       rating: 5,
       likes: 112,
       verified: true
@@ -62,9 +63,9 @@ const TestimonialsSection = () => {
     {
       id: 6,
       name: "@Content_Creator",
-      role: "内容创作者",
+      role: "Content Creator",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
-      content: "作为内容创作者，我需要大量的视觉素材。AI图片生成让我能够快速创建符合品牌调性的图片，而且质量完全不输专业摄影师的作品。",
+      content: "As a content creator, I need lots of visual materials. AI image generation allows me to quickly create images that match brand tone, and the quality is no less than professional photographer works.",
       rating: 5,
       likes: 203,
       verified: true
@@ -102,10 +103,10 @@ const TestimonialsSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            用户体验
+            User Experience
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            听听来自全球用户的真实反馈，了解AI图片生成如何改变他们的创作方式
+            Listen to real feedback from users worldwide and learn how AI image generation is changing their creative process
           </p>
         </motion.div>
 
@@ -133,8 +134,8 @@ const TestimonialsSection = () => {
               transition={{ duration: 0.5 }}
               className="text-center mb-8"
             >
-              <blockquote className="text-xl md:text-2xl text-white italic leading-relaxed mb-6">
-                "{currentUser.content}"
+              <blockquote className="text-xl md:text-2xl text-white leading-relaxed mb-6">
+                {currentUser.content}
               </blockquote>
 
               {/* 评分 */}
@@ -162,9 +163,11 @@ const TestimonialsSection = () => {
             >
               <div className="relative mb-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-gradient-to-r from-blue-500 to-purple-600">
-                  <img
+                  <Image
                     src={currentUser.avatar}
                     alt={currentUser.name}
+                    width={80}
+                    height={80}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -178,7 +181,7 @@ const TestimonialsSection = () => {
                   <h3 className="text-xl font-bold text-white">{currentUser.name}</h3>
                   {currentUser.verified && (
                     <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      已验证
+                      Verified
                     </div>
                   )}
                 </div>
@@ -244,7 +247,7 @@ const TestimonialsSection = () => {
                     : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
                 }`}
               >
-                {isAutoPlaying ? '暂停轮播' : '开始轮播'}
+                {isAutoPlaying ? 'Pause Slideshow' : 'Start Slideshow'}
               </button>
             </div>
           </div>
@@ -259,9 +262,9 @@ const TestimonialsSection = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16"
         >
           {[
-            { label: '满意用户', value: '50,000+', icon: '👥' },
-            { label: '生成图片', value: '1M+', icon: '🎨' },
-            { label: '平均评分', value: '4.9/5', icon: '⭐' }
+            { label: 'Satisfied Users', value: '50,000+', icon: '👥' },
+            { label: 'Generated Images', value: '1M+', icon: '🎨' },
+            { label: 'Average Rating', value: '4.9/5', icon: '⭐' }
           ].map((stat, index) => (
             <motion.div
               key={index}

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 const VideoSection = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -13,29 +14,29 @@ const VideoSection = () => {
     {
       id: 1,
       src: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&h=300&fit=crop',
-      title: '科幻城市',
-      description: '未来主义建筑群',
+      title: 'Sci-Fi City',
+      description: 'Futuristic Architecture',
       model: 'Pro Model'
     },
     {
       id: 2,
       src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
-      title: '自然风景',
-      description: '山峦与湖泊',
+      title: 'Natural Landscape',
+      description: 'Mountains and Lakes',
       model: 'Max Model'
     },
     {
       id: 3,
       src: 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400&h=300&fit=crop',
-      title: '抽象艺术',
-      description: '色彩斑斓的抽象画',
+      title: 'Abstract Art',
+      description: 'Colorful Abstract Painting',
       model: 'Pro Model'
     },
     {
       id: 4,
       src: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&h=300&fit=crop',
-      title: '人物肖像',
-      description: 'AI生成的人物形象',
+      title: 'Portrait',
+      description: 'AI-Generated Character',
       model: 'Max Model'
     }
   ];
@@ -113,12 +114,12 @@ const VideoSection = () => {
               className="text-center lg:text-left"
             >
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                探索AI生成的
+                Explore AI-Generated
                 <span className="gradient-text"> Infinite Possibilities</span>
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed">
-                从概念到现实，只需几秒钟。我们的AI模型能够理解您的创意描述，
-                生成高质量、独特的图像作品。
+                From concept to reality in just seconds. Our AI models understand your creative descriptions
+                and generate high-quality, unique image works.
               </p>
             </motion.div>
 
@@ -144,10 +145,11 @@ const VideoSection = () => {
                     className="absolute inset-0"
                   >
                     <div className="relative h-full group">
-                      <img
+                      <Image
                         src={image.src}
                         alt={image.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       
                       {/* 图片信息覆盖层 */}
@@ -213,7 +215,7 @@ const VideoSection = () => {
                 >
                   {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                   <span className="text-sm">
-                    {isPlaying ? '暂停轮播' : '开始轮播'}
+                    {isPlaying ? 'Pause Slideshow' : 'Start Slideshow'}
                   </span>
                 </button>
               </div>

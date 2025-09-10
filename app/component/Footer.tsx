@@ -17,43 +17,43 @@ import {
 const Footer = () => {
   const footerLinks = {
     product: {
-      title: '产品',
+      title: 'Product',
       links: [
-        { name: 'AI图片生成', href: '#' },
-        { name: '批量处理', href: '#' },
-        { name: 'API接口', href: '#' },
-        { name: '定价方案', href: '#' },
-        { name: '企业版', href: '#' }
+        { name: 'AI Image Generation', href: '#' },
+        { name: 'Batch Processing', href: '#' },
+        { name: 'API Interface', href: '#' },
+        { name: 'Pricing Plans', href: '#' },
+        { name: 'Enterprise', href: '#' }
       ]
     },
     support: {
-      title: '支持',
+      title: 'Support',
       links: [
-        { name: '帮助中心', href: '#' },
-        { name: '技术文档', href: '#' },
-        { name: '社区论坛', href: '#' },
-        { name: '联系我们', href: '#' },
-        { name: '状态页面', href: '#' }
+        { name: 'Help Center', href: '#' },
+        { name: 'Technical Docs', href: '#' },
+        { name: 'Community Forum', href: '#' },
+        { name: 'Contact Us', href: '#' },
+        { name: 'Status Page', href: '#' }
       ]
     },
     community: {
-      title: '社区',
+      title: 'Community',
       links: [
-        { name: '用户作品', href: '#' },
-        { name: '创作挑战', href: '#' },
-        { name: '开发者', href: '#' },
-        { name: '合作伙伴', href: '#' },
-        { name: '新闻动态', href: '#' }
+        { name: 'User Gallery', href: '#' },
+        { name: 'Creative Challenges', href: '#' },
+        { name: 'Developers', href: '#' },
+        { name: 'Partners', href: '#' },
+        { name: 'News & Updates', href: '#' }
       ]
     },
     legal: {
-      title: '法律',
+      title: 'Legal',
       links: [
-        { name: '隐私政策', href: '#' },
-        { name: '服务条款', href: '#' },
-        { name: '版权声明', href: '#' },
-        { name: 'Cookie政策', href: '#' },
-        { name: 'GDPR合规', href: '#' }
+        { name: 'Privacy Policy', href: '#' },
+        { name: 'Terms of Service', href: '#' },
+        { name: 'Copyright Notice', href: '#' },
+        { name: 'Cookie Policy', href: '#' },
+        { name: 'GDPR Compliance', href: '#' }
       ]
     }
   };
@@ -86,7 +86,7 @@ const Footer = () => {
             </div>
             
             <p className="text-gray-400 text-lg leading-relaxed mb-6 max-w-md">
-              瞬间生成，无限想象。用AI技术释放你的创造力，让每一刻灵感成真。
+              Generate instantly, imagine infinitely. Unleash your creativity with AI technology, bringing every inspiration to life.
             </p>
 
             {/* 联系信息 */}
@@ -107,7 +107,7 @@ const Footer = () => {
 
             {/* 社交媒体 */}
             <div className="flex space-x-4">
-              {socialLinks.map((social, index) => (
+              {socialLinks.map((social) => (
                 <motion.a
                   key={social.name}
                   href={social.href}
@@ -159,16 +159,16 @@ const Footer = () => {
         >
           <div className="text-center max-w-2xl mx-auto">
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              订阅我们的更新
+              Subscribe to Our Updates
             </h3>
             <p className="text-gray-300 text-lg mb-6">
-              获取最新的AI技术资讯、产品更新和独家优惠
+              Get the latest AI technology news, product updates, and exclusive offers
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input
                 type="email"
-                placeholder="输入您的邮箱地址"
+                placeholder="Enter your email address"
                 className="flex-1 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-custom text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:border-blue-500 transition-colors"
               />
               <motion.button

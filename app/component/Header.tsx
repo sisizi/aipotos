@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 // Framer Motion: 提供高级动画功能
 import { motion } from "framer-motion";
 // Lucide React: 轻量级图标库
-import { Menu, X, Globe, User, LogIn } from "lucide-react";
+import { Menu, X, Globe } from "lucide-react";
 
 
 /**
@@ -31,7 +31,7 @@ const Header = () => {
 
 
   // 导航菜单项数组
-  const navItems = ["产品", "定价", "文档", "博客"];
+  const navItems = ["Product", "Pricing", "Docs", "Blog"];
 
   return (
 
@@ -120,14 +120,14 @@ const Header = () => {
               whileTap={{ scale: 0.95 }}
               className="text-white hover:text-blue-300 transition-colors text-lg"
             >
-              登录
+              Sign In
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 text-lg"
             >
-              注册
+              Sign Up
             </motion.button>
           </div>
 
@@ -166,10 +166,10 @@ const Header = () => {
             ))}
             <div className="pt-4 border-t border-white/20 space-y-2">
               <button className="block w-full text-left text-white hover:text-blue-300 transition-colors">
-                登录
+                Sign In
               </button>
               <button className="block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full">
-                注册
+                Sign Up
               </button>
             </div>
           </div>
