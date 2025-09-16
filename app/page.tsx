@@ -1,11 +1,9 @@
-import Header from './component/Header';
-import HeroSection from './component/HeroSection';
-import VideoSection from './component/VideoSection';
-import UseCasesSection from './component/UseCasesSection';
-import ProModelSection from './component/ProModelSection';
-import TechSupportSection from './component/TechSupportSection';
-import TestimonialsSection from './component/TestimonialsSection';
-import Footer from './component/Footer';
+import Header from '../component/Header';
+import HeroSection from '../component/HeroSection';
+import UseCasesSection from '../component/UseCasesSection';
+import ProModelSection from '../component/ProModelSection';
+import TestimonialsSection from '../component/TestimonialsSection';
+import Footer from '../component/Footer';
 
 export default function Home() {
   return (
@@ -21,7 +19,7 @@ export default function Home() {
         <HeroSection />
         
         {/* 视频展示区 */}
-        <VideoSection />
+        {/* <VideoSection /> */}
         
         {/* 使用场景 */}
         <UseCasesSection />
@@ -30,7 +28,7 @@ export default function Home() {
         <ProModelSection />
         
         {/* 技术支持 */}
-        <TechSupportSection />
+        {/* <TechSupportSection /> */}
         
         {/* 用户评价 */}
         <TestimonialsSection />
@@ -41,3 +39,4 @@ export default function Home() {
     </div>
   );
 }
+

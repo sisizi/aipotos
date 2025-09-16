@@ -1,0 +1,62 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(rm:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm i:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node:*)",
+      "Bash(nslookup:*)",
+      "Bash(chmod:*)",
+      "Bash(./test-callback.sh)",
+      "Bash(npm run start:*)",
+      "Bash(vercel:*)",
+      "Bash(npx vercel:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(true)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -U $POSTGRES_USER -d $POSTGRES_DATABASE -c \"SELECT task_id, song_id, title, status, audio_url, pipe_url, created_at FROM songs WHERE user_email = ''wujiahao111@gmail.com'' AND status IN (0, 3) ORDER BY created_at DESC LIMIT 20;\")",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git log:*)",
+      "Bash(git reset:*)",
+      "WebFetch(domain:aisonggenerator.ai)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "Notification": [
+      {
+        
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff && say \"Claude Code 需要你的指示\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "afplay /System/Library/Sounds/Glass.aiff && say \"Claude Code 任务完成\""
+          }
+        ]
+      }
+    ]
+  }
+}

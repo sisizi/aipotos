@@ -163,13 +163,13 @@ const TestimonialsSection = () => {
             >
               <div className="relative mb-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-gradient-to-r from-blue-500 to-purple-600">
-                  <Image
+                  {/* <Image
                     src={currentUser.avatar}
                     alt={currentUser.name}
                     width={80}
                     height={80}
                     className="w-full h-full object-cover"
-                  />
+                  /> */}
                 </div>
                 {/* 彩色边框效果 */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full opacity-75 blur-sm"></div>

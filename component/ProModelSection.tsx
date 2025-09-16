@@ -128,12 +128,12 @@ const ProModelSection = () => {
               <div className="relative rounded-2xl overflow-hidden bg-gray-900/50 backdrop-blur-custom border border-white/10">
                 {/* 图片 */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
+                  {/* <Image
                     src={image.src}
                     alt={image.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  /> */}
                   
                   {/* 渐变遮罩 */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

@@ -114,14 +114,6 @@ const UseCasesSection = () => {
       color: "from-cyan-500 to-blue-500",
       bgColor: "from-cyan-900/20 to-blue-900/20",
       borderColor: "border-cyan-500/30"
-    },
-    {
-      icon: <Briefcase className="w-8 h-8" />,
-      title: "Corporate Brand Visual Generation",
-      description: "Automatically generate multi-size image assets that match brand tone",
-      color: "from-slate-500 to-gray-500",
-      bgColor: "from-slate-900/20 to-gray-900/20",
-      borderColor: "border-slate-500/30"
     }
   ];
 

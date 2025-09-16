@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 // Lucide React: 轻量级图标库
 import { Menu, X, Globe } from "lucide-react";
+import LoginButton from "./auth/login-button";
 
 
 /**
@@ -20,6 +21,10 @@ const Header = () => {
   useEffect(() => {
     // 处理滚动事件的函数,监听页面滚动，超过50px时改变导航栏样式
     const handleScroll = () => {
+      // 检查是否有弹窗打开，如果有则不改变导航栏样式
+      const hasModal = document.querySelector('[data-modal="login-modal"]');
+      if (hasModal) return;
+      
       setIsScrolled(window.scrollY > 70);
     };
 
@@ -31,7 +36,7 @@ const Header = () => {
 
 
   // 导航菜单项数组
-  const navItems = ["Product", "Pricing", "Docs", "Blog"];
+  const navItems = ["Product", "Pricing", "Docs"];
 
   return (
 
@@ -41,7 +46,7 @@ const Header = () => {
       initial={{ y: -100 }}
       animate={{ y: 20 }}
       // 根据滚动状态动态改变样式
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      className={`fixed top-0 w-full z-40 transition-all duration-300 ${
         isScrolled
           ? " backdrop-blur-md shadow-sm"
           : "bg-transparent backdrop-blur-custom"
@@ -86,7 +91,7 @@ const Header = () => {
 
               <button className="flex items-center space-x-1 text-white hover:text-blue-300 transition-colors text-xl">
                 <Globe className="w-4 h-4" />
-                <span>Chinese</span>
+                <span>EN</span>
               </button>
 {/* 一个隐藏在父元素下方、右对齐的下拉菜单容器，平时不可见，当用户悬停在父元素上时，会以淡入方式平滑显示出来。 */}
               <div className="absolute top-full right-0 mt-2 w-32 bg-black/90 backdrop-blur-custom rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -96,7 +101,7 @@ const Header = () => {
                     href="#"
                     className="block px-4 py-2 text-white hover:bg-white/10"
                   >
-                    EN 
+                    中文
                   </a>
                   <a
                     href="#"
@@ -114,21 +119,8 @@ const Header = () => {
               </div>
             </motion.div>
 
-            {/* 按钮*/}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-white hover:text-blue-300 transition-colors text-lg"
-            >
-              Sign In
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 text-lg"
-            >
-              Sign Up
-            </motion.button>
+            {/* 登录按钮*/}
+            <LoginButton />
           </div>
 
           {/* Mobile Menu Button */}
@@ -164,13 +156,8 @@ const Header = () => {
                 {item}
               </a>
             ))}
-            <div className="pt-4 border-t border-white/20 space-y-2">
-              <button className="block w-full text-left text-white hover:text-blue-300 transition-colors">
-                Sign In
-              </button>
-              <button className="block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full">
-                Sign Up
-              </button>
+            <div className="pt-4 border-t border-white/20">
+              <LoginButton />
             </div>
           </div>
         </motion.div>
