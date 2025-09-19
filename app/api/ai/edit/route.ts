@@ -74,11 +74,15 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(`AI API responded successfully`);
-      console.log(`AI task ID: ${aiResponse.task_id}`);
+      console.log(`AI task ID: ${aiResponse.taskId}`);
 
-      // 4. 存储编辑后的图片到R2
+      // 4. 验证并存储编辑后的图片到R2
+      if (!aiResponse.success || !aiResponse.imageUrls || aiResponse.imageUrls.length === 0) {
+        throw new Error('AI编辑失败：没有生成图片');
+      }
+
       const outputImageUrl = await r2Service.storeAIGeneratedImage(
-        aiResponse.image_url,
+        aiResponse.imageUrls[0], // 取第一张图片
         taskId,
         userId
       );
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
       await dbService.updateTask(taskId, {
         status: 'completed',
         output_image_url: outputImageUrl,
-        nano_banana_task_id: aiResponse.task_id,
+        nano_banana_task_id: aiResponse.taskId,
         processing_time: processingTime,
         completed_at: new Date().toISOString(),
       });

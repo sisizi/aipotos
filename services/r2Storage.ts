@@ -68,9 +68,9 @@ export class R2StorageService {
         Body: fileBuffer,
         ContentType: contentType,
         Metadata: {
-          userId: userId,
-          uploadTime: timestamp.toString(),
-          originalName: fileName,
+          userId: String(userId),
+          uploadTime: String(timestamp),
+          originalName: String(fileName),
         },
       });
       
@@ -105,6 +105,16 @@ export class R2StorageService {
    */
   async storeAIGeneratedImage(imageUrl: string, taskId: string, userId: string): Promise<string> {
     try {
+      // 验证参数
+      if (!imageUrl) {
+        throw new Error('imageUrl is required');
+      }
+      if (!taskId) {
+        throw new Error('taskId is required');
+      }
+      if (!userId) {
+        throw new Error('userId is required');
+      }
       // 下载图片
       console.log(`Downloading AI generated image from: ${imageUrl}`);
       const response = await fetch(imageUrl, {
@@ -135,10 +145,10 @@ export class R2StorageService {
         Body: imageBuffer,
         ContentType: contentType,
         Metadata: {
-          taskId: taskId,
-          userId: userId,
-          originalUrl: imageUrl,
-          generatedAt: timestamp.toString(),
+          taskId: String(taskId),
+          userId: String(userId),
+          originalUrl: String(imageUrl),
+          generatedAt: String(timestamp),
         },
       });
       

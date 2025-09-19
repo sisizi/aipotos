@@ -1,13 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
-  Mail, 
-  Phone, 
+import {
+  Twitter,
+  Linkedin,
+  Instagram,
+  Mail,
+  Phone,
   MapPin,
   ArrowRight,
   Heart,
@@ -59,7 +58,6 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { name: 'GitHub', icon: <Github className="w-5 h-5" />, href: '#' },
     { name: 'Twitter', icon: <Twitter className="w-5 h-5" />, href: '#' },
     { name: 'LinkedIn', icon: <Linkedin className="w-5 h-5" />, href: '#' },
     { name: 'Instagram', icon: <Instagram className="w-5 h-5" />, href: '#' }

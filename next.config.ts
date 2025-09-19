@@ -1,4 +1,7 @@
+import { bootstrap } from 'global-agent';
 import type { NextConfig } from "next";
+
+bootstrap();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
