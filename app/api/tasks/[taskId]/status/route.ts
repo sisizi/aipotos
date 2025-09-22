@@ -50,11 +50,18 @@ export async function GET(
       try {
         const aiTaskStatus = await nanoBananaService.getTaskStatus(dbTask.nano_banana_task_id);
 
+        // 计算基础时间参数
+        const createdTime = new Date(dbTask.created_at).getTime();
+        const now = Date.now();
+        const elapsed = (now - createdTime) / 1000; // 秒
+        const estimatedTotal = 90; // 预估总时间90秒
+
         // 根据AI任务状态更新本地任务状态
         if (aiTaskStatus.state === 'success') {
           // AI任务已完成但本地状态未更新，可能是后台处理还未完成
           taskProgress.message = '任务已完成，正在保存结果...';
           taskProgress.progress = 90;
+          taskProgress.estimatedTimeLeft = Math.max(0, Math.round(10 - (elapsed - 80))); // 最后10秒
         } else if (aiTaskStatus.state === 'fail') {
           // AI任务失败但本地状态未更新
           taskProgress.status = 'failed';
@@ -68,13 +75,19 @@ export async function GET(
         } else if (aiTaskStatus.state === 'waiting') {
           taskProgress.progress = 25;
           taskProgress.message = '任务排队中，请稍候...';
-
-          // 估算剩余时间（基于创建时间）
-          const createdTime = new Date(dbTask.created_at).getTime();
-          const now = Date.now();
-          const elapsed = (now - createdTime) / 1000; // 秒
-
-          const estimatedTotal = 60; // 预估总时间60秒
+          const remaining = Math.max(0, estimatedTotal - elapsed);
+          taskProgress.estimatedTimeLeft = Math.round(remaining);
+        } else if (aiTaskStatus.state === 'running') {
+          // 任务正在运行
+          const progressRatio = Math.min(elapsed / estimatedTotal, 0.85); // 最多到85%
+          taskProgress.progress = Math.round(25 + progressRatio * 60); // 25%-85%
+          taskProgress.message = '正在生成图像，请稍候...';
+          const remaining = Math.max(0, estimatedTotal - elapsed);
+          taskProgress.estimatedTimeLeft = Math.round(remaining);
+        } else {
+          // 其他状态也显示倒计时
+          taskProgress.progress = 30;
+          taskProgress.message = '正在处理中...';
           const remaining = Math.max(0, estimatedTotal - elapsed);
           taskProgress.estimatedTimeLeft = Math.round(remaining);
         }
@@ -82,6 +95,15 @@ export async function GET(
       } catch (aiError) {
         console.warn(`Failed to query AI task status for ${dbTask.nano_banana_task_id}:`, aiError);
         // 继续使用数据库状态，不因AI查询失败而中断
+        // 即使AI查询失败，也提供倒计时
+        const createdTime = new Date(dbTask.created_at).getTime();
+        const now = Date.now();
+        const elapsed = (now - createdTime) / 1000;
+        const estimatedTotal = 90;
+        const remaining = Math.max(0, estimatedTotal - elapsed);
+        taskProgress.estimatedTimeLeft = Math.round(remaining);
+        taskProgress.progress = 40;
+        taskProgress.message = '正在处理中...';
       }
     }
 
@@ -91,6 +113,26 @@ export async function GET(
       taskProgress.message = '任务完成';
     } else if (dbTask.status === 'failed') {
       taskProgress.message = dbTask.error_message || '任务失败';
+    } else if (dbTask.status === 'processing' && !dbTask.nano_banana_task_id) {
+      // 处理状态但没有AI任务ID的情况，也提供倒计时
+      const createdTime = new Date(dbTask.created_at).getTime();
+      const now = Date.now();
+      const elapsed = (now - createdTime) / 1000;
+      const estimatedTotal = 90; // 预估总时间90秒
+      const remaining = Math.max(0, estimatedTotal - elapsed);
+      taskProgress.estimatedTimeLeft = Math.round(remaining);
+      taskProgress.progress = Math.min(50, Math.round((elapsed / estimatedTotal) * 80));
+      taskProgress.message = '正在处理中...';
+    } else if (dbTask.status === 'pending') {
+      // 等待状态也提供倒计时
+      const createdTime = new Date(dbTask.created_at).getTime();
+      const now = Date.now();
+      const elapsed = (now - createdTime) / 1000;
+      const estimatedTotal = 90; // 预估总时间90秒
+      const remaining = Math.max(0, estimatedTotal - elapsed);
+      taskProgress.estimatedTimeLeft = Math.round(remaining);
+      taskProgress.progress = 10;
+      taskProgress.message = '任务已创建，等待处理...';
     }
 
     return NextResponse.json({
