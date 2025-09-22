@@ -42,9 +42,18 @@ export async function GET(
         let intervalId: NodeJS.Timeout;
         let isCompleted = false;
 
+        let controllerClosed = false;
+
         const sendEvent = (data: any) => {
-          const eventData = `data: ${JSON.stringify(data)}\n\n`;
-          controller.enqueue(new TextEncoder().encode(eventData));
+          try {
+            if (!controllerClosed) {
+              const eventData = `data: ${JSON.stringify(data)}\n\n`;
+              controller.enqueue(new TextEncoder().encode(eventData));
+            }
+          } catch (error) {
+            console.warn('Failed to send SSE event, controller may be closed:', error);
+            controllerClosed = true;
+          }
         };
 
         const checkTaskStatus = async () => {
@@ -82,12 +91,12 @@ export async function GET(
 
                 // 根据AI任务状态更新本地任务状态
                 if (aiTaskStatus.state === 'success') {
-                  taskProgress.message = '任务已完成，正在保存结果...';
+                  taskProgress.message = 'Task completed, saving results...';
                   taskProgress.progress = 90;
                   taskProgress.estimatedTimeLeft = Math.max(0, Math.round(10 - (elapsed - 80)));
                 } else if (aiTaskStatus.state === 'fail') {
                   taskProgress.status = 'failed';
-                  taskProgress.message = aiTaskStatus.failMsg || '任务处理失败';
+                  taskProgress.message = aiTaskStatus.failMsg || 'Task processing failed';
 
                   // 更新数据库状态
                   await dbService.updateTask(taskId, {
@@ -96,18 +105,18 @@ export async function GET(
                   });
                 } else if (aiTaskStatus.state === 'waiting') {
                   taskProgress.progress = 25;
-                  taskProgress.message = '任务排队中，请稍候...';
+                  taskProgress.message = 'Task queued, please wait...';
                   const remaining = Math.max(0, estimatedTotal - elapsed);
                   taskProgress.estimatedTimeLeft = Math.round(remaining);
                 } else if (aiTaskStatus.state === 'running') {
                   const progressRatio = Math.min(elapsed / estimatedTotal, 0.85);
                   taskProgress.progress = Math.round(25 + progressRatio * 60);
-                  taskProgress.message = '正在生成图像，请稍候...';
+                  taskProgress.message = 'Generating image, please wait...';
                   const remaining = Math.max(0, estimatedTotal - elapsed);
                   taskProgress.estimatedTimeLeft = Math.round(remaining);
                 } else {
                   taskProgress.progress = 30;
-                  taskProgress.message = '正在处理中...';
+                  taskProgress.message = 'Processing...';
                   const remaining = Math.max(0, estimatedTotal - elapsed);
                   taskProgress.estimatedTimeLeft = Math.round(remaining);
                 }
@@ -121,17 +130,17 @@ export async function GET(
                 const remaining = Math.max(0, estimatedTotal - elapsed);
                 taskProgress.estimatedTimeLeft = Math.round(remaining);
                 taskProgress.progress = 40;
-                taskProgress.message = '正在处理中...';
+                taskProgress.message = 'Processing...';
               }
             }
 
             // 处理其他状态
             if (dbTask.status === 'completed') {
               taskProgress.progress = 100;
-              taskProgress.message = '任务完成';
+              taskProgress.message = 'Task completed';
               isCompleted = true;
             } else if (dbTask.status === 'failed') {
-              taskProgress.message = dbTask.error_message || '任务失败';
+              taskProgress.message = dbTask.error_message || 'Task failed';
               isCompleted = true;
             } else if (dbTask.status === 'processing' && !dbTask.nano_banana_task_id) {
               const createdTime = new Date(dbTask.created_at).getTime();
@@ -141,7 +150,7 @@ export async function GET(
               const remaining = Math.max(0, estimatedTotal - elapsed);
               taskProgress.estimatedTimeLeft = Math.round(remaining);
               taskProgress.progress = Math.min(50, Math.round((elapsed / estimatedTotal) * 80));
-              taskProgress.message = '正在处理中...';
+              taskProgress.message = 'Processing...';
             } else if (dbTask.status === 'pending') {
               const createdTime = new Date(dbTask.created_at).getTime();
               const now = Date.now();
@@ -150,7 +159,7 @@ export async function GET(
               const remaining = Math.max(0, estimatedTotal - elapsed);
               taskProgress.estimatedTimeLeft = Math.round(remaining);
               taskProgress.progress = 10;
-              taskProgress.message = '任务已创建，等待处理...';
+              taskProgress.message = 'Task created, waiting for processing...';
             }
 
             // 发送状态更新
@@ -175,10 +184,15 @@ export async function GET(
         };
 
         const cleanup = () => {
+          controllerClosed = true;
           if (intervalId) {
             clearInterval(intervalId);
           }
-          controller.close();
+          try {
+            controller.close();
+          } catch (error) {
+            console.warn('Controller already closed:', error);
+          }
         };
 
         // 立即检查一次状态
@@ -216,20 +230,20 @@ export async function GET(
 }
 
 /**
- * 根据任务状态获取用户友好的消息
+ * Get user-friendly status message
  */
 function getStatusMessage(status: string): string {
   switch (status) {
     case 'pending':
-      return '任务已创建，等待处理...';
+      return 'Task created, waiting for processing...';
     case 'processing':
-      return '正在生成图像，请稍候...';
+      return 'Generating image, please wait...';
     case 'completed':
-      return '任务完成';
+      return 'Task completed';
     case 'failed':
-      return '任务失败';
+      return 'Task failed';
     default:
-      return '未知状态';
+      return 'Unknown status';
   }
 }
 

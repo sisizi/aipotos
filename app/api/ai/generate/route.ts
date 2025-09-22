@@ -171,10 +171,36 @@ export async function POST(request: NextRequest) {
 
         } catch (error) {
           console.error('Async task creation failed:', error);
+
+          // 提取错误信息
+          let errorMessage = 'Task initialization failed';
+          if (error instanceof Error) {
+            errorMessage = error.message;
+
+            // 如果是网络或API相关错误，提供更友好的错误信息
+            if (error.message.includes('API service returned HTML')) {
+              errorMessage = 'AI service is currently down for maintenance. Please try again in a few minutes.';
+            } else if (error.message.includes('API service returned empty response')) {
+              errorMessage = 'AI service connection timeout. Please try again.';
+            } else if (error.message.includes('Invalid JSON response')) {
+              errorMessage = 'AI service temporarily unavailable. Please try again later.';
+            } else if (error.message.includes('Network error')) {
+              errorMessage = 'Network connection failed. Please check your internet connection.';
+            } else if (error.message.includes('HTTP_')) {
+              errorMessage = 'AI service is experiencing issues. Please try again later.';
+            } else if (error.message.includes('MISSING_API_KEY')) {
+              errorMessage = 'Service configuration error. Please contact support.';
+            } else if (error.message.includes('Request timeout') || error.message.includes('timeout')) {
+              errorMessage = 'AI service request timed out. Please try again.';
+            } else if (error.message.includes('E6716') || error.message.includes('unexpected error handling prediction')) {
+              errorMessage = 'AI generation failed. This AI service primarily works with image editing. Please try uploading an image to edit instead.';
+            }
+          }
+
           // 更新任务状态为失败
           await dbService.updateTask(dbTaskId, {
             status: 'failed',
-            error_message: error instanceof Error ? error.message : 'Task initialization failed',
+            error_message: errorMessage,
           });
         }
       };

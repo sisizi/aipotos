@@ -1,0 +1,260 @@
+
+> aiphoto@0.1.0 dev
+> next dev
+
+ ⚠ Port 3000 is in use by process 25028, using available port 3001 instead.
+   ▲ Next.js 15.5.3
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.72.1:3001
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+(node:35180) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Ready in 3s
+ ○ Compiling /api/test-connection ...
+ ✓ Compiled /api/test-connection in 805ms (299 modules)
+=== API Connection Test Started ===
+Environment variables: {
+  NANO_BANANA_API_KEY: true,
+  NANO_BANANA_BASE_URL: 'https://api.kie.ai/api/v1/jobs',
+  http_proxy: 'http://127.0.0.1:7897',
+  https_proxy: 'http://127.0.0.1:7897',
+  NODE_TLS_REJECT_UNAUTHORIZED: '0'
+}
+Nano Banana API initialized: {
+  baseURL: 'https://api.kie.ai/api/v1/jobs',
+  hasApiKey: true,
+  apiKeyLength: 32,
+  proxySettings: {
+    http_proxy: 'http://127.0.0.1:7897',
+    https_proxy: 'http://127.0.0.1:7897',
+    NODE_TLS_REJECT_UNAUTHORIZED: '0'
+  }
+}
+Testing Nano Banana API connection...
+Connection test response: {
+  status: 200,
+  headers: {
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '982fe2ea6dd63644-FRA',
+    connection: 'keep-alive',
+    'content-encoding': 'br',
+    'content-type': 'application/json;charset=UTF-8',
+    date: 'Mon, 22 Sep 2025 06:53:38 GMT',
+    nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+    'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=zF7K6ApnaHPYf3LVYKNwus77FcqhE6dB%2FVe8FlhETYWjc9TIP142OUugnV0P%2B3paCNG7VA4kbCZhuXoyiYuNCborVXOOpkI7vw%3D%3D"}]}',
+    server: 'cloudflare',
+    'set-cookie': 'JSESSIONID=FFAD376D0108D661C89807582BB0C616; HttpOnly; Path=/',
+    'transfer-encoding': 'chunked'
+  },
+  responseText: '{"code":500,"msg":"image_urls is required","data":null}'
+}
+Connection test result: {
+  success: true,
+  details: {
+    status: 200,
+    responseText: '{"code":500,"msg":"image_urls is required","data":null}',
+    headers: {
+      'cf-cache-status': 'DYNAMIC',
+      'cf-ray': '982fe2ea6dd63644-FRA',
+      connection: 'keep-alive',
+      'content-encoding': 'br',
+      'content-type': 'application/json;charset=UTF-8',
+      date: 'Mon, 22 Sep 2025 06:53:38 GMT',
+      nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+      'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=zF7K6ApnaHPYf3LVYKNwus77FcqhE6dB%2FVe8FlhETYWjc9TIP142OUugnV0P%2B3paCNG7VA4kbCZhuXoyiYuNCborVXOOpkI7vw%3D%3D"}]}',
+      server: 'cloudflare',
+      'set-cookie': 'JSESSIONID=FFAD376D0108D661C89807582BB0C616; HttpOnly; Path=/',
+      'transfer-encoding': 'chunked'
+    }
+  }
+}
+ GET /api/test-connection 200 in 1766ms
+ ✓ Compiled in 245ms (104 modules)
+ ✓ Compiled in 115ms (104 modules)
+=== API Connection Test Started ===
+Environment variables: {
+  NANO_BANANA_API_KEY: true,
+  NANO_BANANA_BASE_URL: 'https://api.kie.ai/api/v1/jobs',
+  http_proxy: 'http://127.0.0.1:7897',
+  https_proxy: 'http://127.0.0.1:7897',
+  NODE_TLS_REJECT_UNAUTHORIZED: '0'
+}
+Nano Banana API initialized: {
+  baseURL: 'https://api.kie.ai/api/v1/jobs',
+  hasApiKey: true,
+  apiKeyLength: 32,
+  proxySettings: {
+    http_proxy: 'http://127.0.0.1:7897',
+    https_proxy: 'http://127.0.0.1:7897',
+    NODE_TLS_REJECT_UNAUTHORIZED: '0'
+  }
+}
+Testing Nano Banana API connection...
+Connection test response: {
+  status: 200,
+  headers: {
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '982fe3fd3b7adccd-FRA',
+    connection: 'keep-alive',
+    'content-encoding': 'br',
+    'content-type': 'application/json;charset=UTF-8',
+    date: 'Mon, 22 Sep 2025 06:54:22 GMT',
+    nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+    'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=YU0UivDL1deSoPfnFA%2ByWOIrvi4jyvgbAEUCmL98Ve%2B97Ru4ic8NInJegW5nO7ZsjtKs1MjOtHA9OX%2BOLz7aYJSGWMBVUKkAXw%3D%3D"}]}',
+    server: 'cloudflare',
+    'set-cookie': 'JSESSIONID=AE3AE6D1D90FD8D27A2AE57E41D41045; HttpOnly; Path=/',
+    'transfer-encoding': 'chunked'
+  },
+  responseText: '{"code":500,"msg":"image_urls is required","data":null}'
+}
+Connection test result: {
+  success: true,
+  details: {
+    status: 200,
+    responseText: '{"code":500,"msg":"image_urls is required","data":null}',
+    headers: {
+      'cf-cache-status': 'DYNAMIC',
+      'cf-ray': '982fe3fd3b7adccd-FRA',
+      connection: 'keep-alive',
+      'content-encoding': 'br',
+      'content-type': 'application/json;charset=UTF-8',
+      date: 'Mon, 22 Sep 2025 06:54:22 GMT',
+      nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+      'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=YU0UivDL1deSoPfnFA%2ByWOIrvi4jyvgbAEUCmL98Ve%2B97Ru4ic8NInJegW5nO7ZsjtKs1MjOtHA9OX%2BOLz7aYJSGWMBVUKkAXw%3D%3D"}]}',
+      server: 'cloudflare',
+      'set-cookie': 'JSESSIONID=AE3AE6D1D90FD8D27A2AE57E41D41045; HttpOnly; Path=/',
+      'transfer-encoding': 'chunked'
+    }
+  }
+}
+ GET /api/test-connection 200 in 836ms
+ ✓ Compiled in 96ms (104 modules)
+ ✓ Compiled in 116ms (104 modules)
+ ✓ Compiled in 114ms (104 modules)
+=== API Connection Test Started ===
+Environment variables: {
+  NANO_BANANA_API_KEY: true,
+  NANO_BANANA_BASE_URL: 'https://api.kie.ai/api/v1/jobs',
+  http_proxy: 'http://127.0.0.1:7897',
+  https_proxy: 'http://127.0.0.1:7897',
+  NODE_TLS_REJECT_UNAUTHORIZED: '0'
+}
+Nano Banana API initialized: {
+  baseURL: 'https://api.kie.ai/api/v1/jobs',
+  hasApiKey: true,
+  apiKeyLength: 32,
+  proxySettings: {
+    http_proxy: 'http://127.0.0.1:7897',
+    https_proxy: 'http://127.0.0.1:7897',
+    NODE_TLS_REJECT_UNAUTHORIZED: '0'
+  }
+}
+Testing Nano Banana API connection...
+Connection test response: {
+  status: 200,
+  headers: {
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '982fe53e3a4fe98c-FRA',
+    connection: 'keep-alive',
+    'content-encoding': 'br',
+    'content-type': 'application/json;charset=UTF-8',
+    date: 'Mon, 22 Sep 2025 06:55:13 GMT',
+    nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+    'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LMAB99T02TslfpdfYr2xZFxwJJf8jZpenMBqoeq95KzxJlMqDxUZu4t5AMmGYnYoAswOqV4zGoR7C%2B%2FAOrsIzhaPeKhA9Qh3lQ%3D%3D"}]}',
+    server: 'cloudflare',
+    'set-cookie': 'JSESSIONID=C12C8D892C2CCBE25AB1990660BF14A1; HttpOnly; Path=/',
+    'transfer-encoding': 'chunked'
+  },
+  responseText: '{"code":500,"msg":"image_urls file type not supported","data":null}'
+}
+Connection test result: {
+  success: true,
+  details: {
+    status: 200,
+    responseText: '{"code":500,"msg":"image_urls file type not supported","data":null}',
+    headers: {
+      'cf-cache-status': 'DYNAMIC',
+      'cf-ray': '982fe53e3a4fe98c-FRA',
+      connection: 'keep-alive',
+      'content-encoding': 'br',
+      'content-type': 'application/json;charset=UTF-8',
+      date: 'Mon, 22 Sep 2025 06:55:13 GMT',
+      nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+      'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LMAB99T02TslfpdfYr2xZFxwJJf8jZpenMBqoeq95KzxJlMqDxUZu4t5AMmGYnYoAswOqV4zGoR7C%2B%2FAOrsIzhaPeKhA9Qh3lQ%3D%3D"}]}',
+      server: 'cloudflare',
+      'set-cookie': 'JSESSIONID=C12C8D892C2CCBE25AB1990660BF14A1; HttpOnly; Path=/',
+      'transfer-encoding': 'chunked'
+    }
+  }
+}
+ GET /api/test-connection 200 in 1398ms
+ ✓ Compiled in 132ms (104 modules)
+ ✓ Compiled in 127ms (104 modules)
+=== API Connection Test Started ===
+Environment variables: {
+  NANO_BANANA_API_KEY: true,
+  NANO_BANANA_BASE_URL: 'https://api.kie.ai/api/v1/jobs',
+  http_proxy: 'http://127.0.0.1:7897',
+  https_proxy: 'http://127.0.0.1:7897',
+  NODE_TLS_REJECT_UNAUTHORIZED: '0'
+}
+Nano Banana API initialized: {
+  baseURL: 'https://api.kie.ai/api/v1/jobs',
+  hasApiKey: true,
+  apiKeyLength: 32,
+  proxySettings: {
+    http_proxy: 'http://127.0.0.1:7897',
+    https_proxy: 'http://127.0.0.1:7897',
+    NODE_TLS_REJECT_UNAUTHORIZED: '0'
+  }
+}
+Testing Nano Banana API connection...
+Connection test response: {
+  status: 200,
+  headers: {
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '982fe5f4cf774dc7-FRA',
+    connection: 'keep-alive',
+    'content-encoding': 'br',
+    'content-type': 'application/json;charset=UTF-8',
+    date: 'Mon, 22 Sep 2025 06:55:43 GMT',
+    nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+    'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=1Id3WNOhlE9sPmsAN8FXT33%2BjkRl7xnvgkW4Gb190E38Sgqdp3b3JcGEB%2BooYD%2FKSHfJvmxHsQGH%2BcvA4WQQSn1jyKfQEjc5lA%3D%3D"}]}',
+    server: 'cloudflare',
+    'set-cookie': 'JSESSIONID=09670489049E222B9AE5137124D60D37; HttpOnly; Path=/',
+    'transfer-encoding': 'chunked'
+  },
+  responseText: '{"code":200,"msg":"success","data":{"taskId":"12b4cb27e682b626cc61791db6868fbf","recordId":"12b4cb27e682b626cc61791db6868fbf"}}'
+}
+Connection test result: {
+  success: true,
+  details: {
+    status: 200,
+    responseText: '{"code":200,"msg":"success","data":{"taskId":"12b4cb27e682b626cc61791db6868fbf","recordId":"12b4cb27e682b626cc61791db6868fbf"}}',
+    headers: {
+      'cf-cache-status': 'DYNAMIC',
+      'cf-ray': '982fe5f4cf774dc7-FRA',
+      connection: 'keep-alive',
+      'content-encoding': 'br',
+      'content-type': 'application/json;charset=UTF-8',
+      date: 'Mon, 22 Sep 2025 06:55:43 GMT',
+      nel: '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}',
+      'report-to': '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=1Id3WNOhlE9sPmsAN8FXT33%2BjkRl7xnvgkW4Gb190E38Sgqdp3b3JcGEB%2BooYD%2FKSHfJvmxHsQGH%2BcvA4WQQSn1jyKfQEjc5lA%3D%3D"}]}',
+      server: 'cloudflare',
+      'set-cookie': 'JSESSIONID=09670489049E222B9AE5137124D60D37; HttpOnly; Path=/',
+      'transfer-encoding': 'chunked'
+    }
+  }
+}
+ GET /api/test-connection 200 in 1825ms
+ ✓ Compiled in 112ms (104 modules)
+ ✓ Compiled in 25ms
+ ✓ Compiled in 185ms (194 modules)
+   Reload env: .env.local
+ ✓ Compiled in 119ms (194 modules)
+ ✓ Compiled in 84ms (194 modules)
+ ✓ Compiled in 58ms (194 modules)

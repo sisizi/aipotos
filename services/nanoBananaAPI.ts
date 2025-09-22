@@ -24,6 +24,12 @@ export class NanoBananaAPIService {
         'MISSING_API_KEY'
       );
     }
+
+    console.log('Nano Banana API initialized:', {
+      baseURL: this.baseURL,
+      hasApiKey: !!this.apiKey,
+      apiKeyLength: this.apiKey.length
+    });
   }
 
   /**
@@ -32,6 +38,19 @@ export class NanoBananaAPIService {
   private getWebhookUrl(): string {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
     return `${baseUrl}/api/webhook/nano-banana`;
+  }
+
+  /**
+   * 获取指定尺寸的白色画布URL
+   * @param width 宽度
+   * @param height 高度
+   * @returns 白色画布图片URL
+   */
+  private getBlankCanvasUrl(width: number, height: number): string {
+    // 使用一个简单的白色画布图片URL
+    // 这是一个1x1白色像素的base64编码，然后我们让服务处理
+    const size = Math.min(width, height, 1024); // 限制尺寸避免问题
+    return `https://dummyimage.com/${size}x${size}/ffffff/ffffff.png`;
   }
 
   /**
@@ -51,6 +70,10 @@ export class NanoBananaAPIService {
         }
       });
 
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -59,8 +82,11 @@ export class NanoBananaAPIService {
           'User-Agent': 'PhotoGen-AI/1.0',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       const responseText = await response.text();
       console.log(`Nano Banana API response status: ${response.status}`);
@@ -99,10 +125,36 @@ export class NanoBananaAPIService {
 
       } catch (parseError) {
         console.error('Failed to parse Nano Banana API response as JSON:', parseError);
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+        console.error('Full response text that failed to parse:', responseText);
+        console.error('Response text length:', responseText.length);
+        console.error('Response text type:', typeof responseText);
+
+        // Check if response is HTML (common when API is down)
+        const isHTML = responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html');
+        const isEmptyResponse = responseText.trim().length === 0;
+
+        let errorMessage = 'Invalid JSON response from Nano Banana API';
+        if (isHTML) {
+          errorMessage = 'API service returned HTML instead of JSON (service may be down)';
+        } else if (isEmptyResponse) {
+          errorMessage = 'API service returned empty response';
+        } else {
+          errorMessage = `Invalid JSON response from Nano Banana API. Response: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+        }
+
         throw new AIServiceError(
-          'Invalid JSON response from Nano Banana API',
+          errorMessage,
           'INVALID_JSON',
-          { responseText, parseError }
+          {
+            responseText: responseText.substring(0, 500), // Limit stored response text
+            responseStatus: response.status,
+            responseHeaders: Object.fromEntries(response.headers.entries()),
+            parseError: parseError instanceof Error ? parseError.message : String(parseError),
+            isHTML,
+            isEmptyResponse
+          }
         );
       }
 
@@ -112,6 +164,16 @@ export class NanoBananaAPIService {
       }
 
       console.error('Nano Banana API request failed:', error);
+
+      // Handle timeout/abort errors specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new AIServiceError(
+          'Request timeout: AI service is taking too long to respond',
+          'REQUEST_TIMEOUT',
+          { endpoint: url, error }
+        );
+      }
+
       throw new AIServiceError(
         `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'NETWORK_ERROR',
@@ -127,14 +189,21 @@ export class NanoBananaAPIService {
     const url = `${this.baseURL}/recordInfo?taskId=${taskId}`;
 
     try {
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for status checks
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'User-Agent': 'PhotoGen-AI/1.0',
           'Accept': 'application/json',
-        }
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new AIServiceError(
@@ -161,6 +230,16 @@ export class NanoBananaAPIService {
         throw error;
       }
       console.error('Error getting task status:', error);
+
+      // Handle timeout/abort errors specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new AIServiceError(
+          'Task status check timeout: AI service is taking too long to respond',
+          'STATUS_CHECK_TIMEOUT',
+          { taskId }
+        );
+      }
+
       throw new AIServiceError(
         `Task status check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'TASK_STATUS_FAILED',
@@ -175,12 +254,15 @@ export class NanoBananaAPIService {
    * @returns 任务ID
    */
   async createGenerateTask(params: Omit<GenerateImageRequest, 'user_id'>): Promise<string> {
-    // 根据文档，图片生成使用 google/nano-banana-edit 模型
+    // Nano Banana API是图片编辑API，需要一个基础图片
+    // 对于"生成"任务，我们使用白色画布作为基础
+    const baseImageUrl = this.getBlankCanvasUrl(params.width || 512, params.height || 512);
+
     const requestData: NanoBananaCreateTaskRequest = {
       model: 'google/nano-banana-edit',
       input: {
         prompt: params.prompt,
-        image_urls: [], // 生成任务不需要输入图片
+        image_urls: [baseImageUrl],
         output_format: 'png',
         image_size: this.mapImageSize(params.width, params.height),
       },
@@ -191,7 +273,9 @@ export class NanoBananaAPIService {
     console.log('Creating image generation task with params:', {
       model: requestData.model,
       prompt: params.prompt.substring(0, 100) + '...',
-      image_size: requestData.input.image_size
+      image_size: requestData.input.image_size,
+      baseImageUrl: baseImageUrl,
+      targetSize: `${params.width || 512}x${params.height || 512}`
     });
 
     try {
@@ -411,20 +495,76 @@ export class NanoBananaAPIService {
   }
 
   /**
+   * 简单的连接测试
+   * @returns 连接状态
+   */
+  async testConnection(): Promise<{ success: boolean; error?: string; details?: any }> {
+    try {
+      console.log('Testing Nano Banana API connection...');
+      const url = `${this.baseURL}/createTask`;
+
+      // 测试最小的请求
+      const testData = {
+        model: 'google/nano-banana-edit',
+        input: {
+          prompt: 'simple test',
+          image_urls: ['https://via.placeholder.com/512x512.png'], // 使用占位符图片URL
+          output_format: 'png',
+          image_size: 'auto'
+        }
+      };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'PhotoGen-AI/1.0',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(testData),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      const responseText = await response.text();
+
+      console.log('Connection test response:', {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        responseText: responseText.substring(0, 500)
+      });
+
+      return {
+        success: response.ok,
+        details: {
+          status: response.status,
+          responseText: responseText.substring(0, 200),
+          headers: Object.fromEntries(response.headers.entries())
+        }
+      };
+
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: { error }
+      };
+    }
+  }
+
+  /**
    * 检查API健康状态
    * @returns 是否可用
    */
   async healthCheck(): Promise<boolean> {
     try {
-      // 简单的健康检查：尝试创建一个测试任务
-      const testTaskId = await this.createGenerateTask({
-        prompt: 'test health check',
-        width: 512,
-        height: 512
-      });
-
-      // 如果能成功创建任务，则认为API健康
-      return !!testTaskId;
+      const result = await this.testConnection();
+      return result.success;
     } catch (error) {
       console.error('Nano Banana API health check failed:', error);
       return false;

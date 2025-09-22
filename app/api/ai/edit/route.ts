@@ -116,10 +116,33 @@ export async function POST(request: NextRequest) {
     } catch (aiError) {
       console.error('AI API or storage error:', aiError);
       
+      // 提取错误信息
+      let errorMessage = 'Unknown AI API error';
+      if (aiError instanceof Error) {
+        errorMessage = aiError.message;
+
+        // 如果是网络或API相关错误，提供更友好的错误信息
+        if (aiError.message.includes('API service returned HTML')) {
+          errorMessage = 'AI service is currently down for maintenance. Please try again in a few minutes.';
+        } else if (aiError.message.includes('API service returned empty response')) {
+          errorMessage = 'AI service connection timeout. Please try again.';
+        } else if (aiError.message.includes('Invalid JSON response')) {
+          errorMessage = 'AI service temporarily unavailable. Please try again later.';
+        } else if (aiError.message.includes('Network error')) {
+          errorMessage = 'Network connection failed. Please check your internet connection.';
+        } else if (aiError.message.includes('HTTP_')) {
+          errorMessage = 'AI service is experiencing issues. Please try again later.';
+        } else if (aiError.message.includes('MISSING_API_KEY')) {
+          errorMessage = 'Service configuration error. Please contact support.';
+        } else if (aiError.message.includes('Request timeout') || aiError.message.includes('timeout')) {
+          errorMessage = 'AI service request timed out. Please try again.';
+        }
+      }
+
       // 更新任务状态为失败
       await dbService.updateTask(taskId, {
         status: 'failed',
-        error_message: aiError instanceof Error ? aiError.message : 'Unknown AI API error',
+        error_message: errorMessage,
       });
 
       throw aiError;

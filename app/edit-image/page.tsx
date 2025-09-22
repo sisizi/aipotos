@@ -25,7 +25,7 @@ const EditImagePage = () => {
   const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number>(0); // 预估剩余时间
   const [elapsedTime, setElapsedTime] = useState<number>(0); // 已经过时间
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null); // 任务开始时间
-  const [uploadingSlots, setUploadingSlots] = useState<Set<number>>(new Set()); // 正在上传的slot索引
+  const [uploadingSlots, setUploadingSlots] = useState<Set<string>>(new Set()); // 正在上传的图片URL
   const [isUsingWebhook, setIsUsingWebhook] = useState<boolean>(false); // 是否正在使用webhook
   const [webhookTimeout, setWebhookTimeout] = useState<NodeJS.Timeout | null>(null); // webhook超时定时器
   const fileInputRef = useRef<HTMLInputElement>(null); // 文件输入框的引用
@@ -75,7 +75,7 @@ const EditImagePage = () => {
     const files = event.target.files;
     if (!files || !userId) {
       if (!userId) {
-        alert('正在初始化用户信息，请稍后重试');
+        alert('Initializing user information, please try again later');
       }
       return;
     }
@@ -83,22 +83,20 @@ const EditImagePage = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.size > 10 * 1024 * 1024) { // 改为10MB限制，与API一致
-        alert('图片大小不能超过10MB');
+        alert('Image size cannot exceed 10MB');
         continue;
       }
 
       if (uploadedImages.length + i >= 5) {
-        alert('最多只能上传5张图片');
+        alert('Maximum 5 images allowed');
         break;
       }
 
-      // 计算当前上传slot的索引
-      const currentSlotIndex = uploadedImages.length + i;
+      // 生成临时ID用于跟踪上传状态
+      const tempId = `temp_${Date.now()}_${i}`;
 
-      // 2秒后显示loading状态
-      const loadingTimeout = setTimeout(() => {
-        setUploadingSlots(prev => new Set([...prev, currentSlotIndex]));
-      }, 2000);
+      // 立即显示loading状态
+      setUploadingSlots(prev => new Set([...prev, tempId]));
 
       // 上传到Cloudflare R2
       try {
@@ -112,41 +110,72 @@ const EditImagePage = () => {
           body: formData,
         });
 
-        // 清除loading timeout
-        clearTimeout(loadingTimeout);
-
-        // 移除loading状态
-        setUploadingSlots(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(currentSlotIndex);
-          return newSet;
-        });
-
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
-            setUploadedImages(prev => [...prev, result.data.url].slice(0, 5));
-            console.log('上传成功:', result.data.url);
+            const imageUrl = result.data.url;
+
+            // 上传成功后，添加图片URL，并将loading状态转移到真实URL
+            setUploadedImages(prev => [...prev, imageUrl].slice(0, 5));
+            setUploadingSlots(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(tempId);
+              newSet.add(imageUrl);
+              return newSet;
+            });
+            console.log('Upload successful:', imageUrl);
+
+            // 预加载图片，等图片加载完成后再移除loading
+            const img = new window.Image();
+            img.onload = () => {
+              // 图片加载完成，移除loading状态
+              setUploadingSlots(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(imageUrl);
+                return newSet;
+              });
+            };
+            img.onerror = () => {
+              // 图片加载失败，也移除loading状态
+              setUploadingSlots(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(imageUrl);
+                return newSet;
+              });
+              console.error('Image load failed');
+            };
+            img.src = imageUrl;
           } else {
-            console.error('上传失败:', result.error || '未知错误');
-            alert(`上传失败: ${result.error || '未知错误'}`);
+            console.error('Upload failed:', result.error || 'Unknown error');
+            alert(`Upload failed: ${result.error || 'Unknown error'}`);
+            // 移除loading状态
+            setUploadingSlots(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(tempId);
+              return newSet;
+            });
           }
         } else {
           const errorText = await response.text();
-          console.error('上传失败:', errorText);
-          alert(`上传失败: ${errorText}`);
+          console.error('Upload failed:', errorText);
+          alert(`Upload failed: ${errorText}`);
+          // 移除loading状态
+          setUploadingSlots(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempId);
+            return newSet;
+          });
         }
       } catch (error) {
-        // 清除loading timeout和状态
-        clearTimeout(loadingTimeout);
+        // 移除loading状态
         setUploadingSlots(prev => {
           const newSet = new Set(prev);
-          newSet.delete(currentSlotIndex);
+          newSet.delete(tempId);
           return newSet;
         });
 
-        console.error('上传错误:', error);
-        alert(`上传错误: ${error instanceof Error ? error.message : '网络错误'}`);
+        console.error('Upload error:', error);
+        alert(`Upload error: ${error instanceof Error ? error.message : 'Network error'}`);
       }
     }
   };
@@ -170,7 +199,7 @@ const EditImagePage = () => {
             setIsGenerating(false);
             setCurrentTaskId(null);
             setTaskProgress(100);
-            setTaskMessage('任务完成！');
+            setTaskMessage('Task completed!');
             setTaskStartTime(null);
             console.log('图像生成完成:', task.output_image_url);
             return false; // 停止轮询
@@ -179,7 +208,7 @@ const EditImagePage = () => {
             setIsGenerating(false);
             setCurrentTaskId(null);
             setTaskStartTime(null);
-            alert(`任务失败: ${progress.message}`);
+            alert(`Task failed: ${progress.message}`);
             return false; // 停止轮询
           }
 
@@ -204,7 +233,7 @@ const EditImagePage = () => {
     setCurrentTaskId(taskId);
     if (taskProgress === 0) {
       setTaskProgress(10);
-      setTaskMessage('任务已创建，正在处理中...');
+      setTaskMessage('Task created, processing...');
     }
 
     const pollInterval = setInterval(async () => {
@@ -227,7 +256,7 @@ const EditImagePage = () => {
         setIsGenerating(false);
         setCurrentTaskId(null);
         setTaskStartTime(null);
-        alert('任务处理超时，请稍后手动查询');
+        alert('Task processing timeout, please check manually later');
       }
     }, 300000);
   };
@@ -285,26 +314,26 @@ const EditImagePage = () => {
           console.log('任务创建成功:', result.data.taskId);
           setCurrentTaskId(result.data.taskId);
           setTaskProgress(10);
-          setTaskMessage('任务已创建，正在处理中...');
+          setTaskMessage('Task created, processing...');
 
           // 先尝试使用webhook，15秒后自动切换到轮询
           setupWebhookListener(result.data.taskId);
         } else {
           console.error('任务创建失败:', result.error || '未知错误');
-          alert(`任务创建失败: ${result.error || '未知错误'}`);
+          alert(`Task creation failed: ${result.error || 'Unknown error'}`);
           setIsGenerating(false);
           setTaskStartTime(null);
         }
       } else {
         const errorText = await response.text();
         console.error('任务创建失败:', errorText);
-        alert(`任务创建失败: ${errorText}`);
+        alert(`Task creation failed: ${errorText}`);
         setIsGenerating(false);
         setTaskStartTime(null);
       }
     } catch (error) {
       console.error('任务创建失败:', error);
-      alert(`任务创建失败: ${error instanceof Error ? error.message : '网络错误'}`);
+      alert(`Task creation failed: ${error instanceof Error ? error.message : 'Network error'}`);
       setIsGenerating(false);
       setTaskStartTime(null);
     }
@@ -316,7 +345,7 @@ const EditImagePage = () => {
 
   const handleDownload = async () => {
     if (!generatedImage) {
-      alert('没有可下载的图片，请先生成图片');
+      alert('No image available for download, please generate an image first');
       return;
     }
 
@@ -360,7 +389,7 @@ const EditImagePage = () => {
       console.log('图片下载成功');
     } catch (error) {
       console.error('下载失败:', error);
-      alert('下载失败，请稍后重试');
+      alert('Download failed, please try again later');
     }
   };
 
@@ -387,7 +416,7 @@ const EditImagePage = () => {
             setIsGenerating(false);
             setCurrentTaskId(null);
             setTaskProgress(100);
-            setTaskMessage('任务完成！');
+            setTaskMessage('Task completed!');
             setTaskStartTime(null);
             setIsUsingWebhook(false);
             eventSource.close();
@@ -399,7 +428,7 @@ const EditImagePage = () => {
             setTaskStartTime(null);
             setIsUsingWebhook(false);
             eventSource.close();
-            alert(`任务失败: ${progress.message}`);
+            alert(`Task failed: ${progress.message}`);
           }
         }
       } catch (error) {
@@ -464,7 +493,7 @@ const EditImagePage = () => {
                     ? 'border-white/20 hover:bg-white/5'
                     : 'border-white/10 cursor-not-allowed opacity-50'
                 }`}
-                title={generatedImage ? '下载生成的图片' : '请先生成图片'}
+                title={generatedImage ? 'Download generated image' : 'Please generate an image first'}
               >
                 <Download className={`w-4 h-4 transition-colors ${
                   generatedImage
@@ -523,6 +552,13 @@ const EditImagePage = () => {
                         height={200}
                         className="w-full h-full object-cover"
                       />
+                      {/* 如果图片正在加载，显示loading遮罩 */}
+                      {uploadingSlots.has(image) && (
+                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
+                          <div className="text-xs text-blue-400">Loading...</div>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
@@ -533,18 +569,18 @@ const EditImagePage = () => {
                   </div>
                 ))}
 
-                {/* 显示正在上传的loading状态 */}
-                {Array.from(uploadingSlots).map((slotIndex) => (
-                  <div key={`loading-${slotIndex}`} className="relative group">
+                {/* 显示正在上传但还没有URL的loading状态 */}
+                {Array.from(uploadingSlots).filter(id => id.startsWith('temp_')).map((tempId) => (
+                  <div key={`loading-${tempId}`} className="relative group">
                     <div className="aspect-square rounded-lg border-2 border-dashed border-blue-400/50 flex flex-col items-center justify-center bg-blue-500/10">
                       <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <div className="text-xs text-blue-400">上传中...</div>
+                      <div className="text-xs text-blue-400">Uploading...</div>
                     </div>
                   </div>
                 ))}
 
                 {/* 显示添加按钮（如果还有空位且没有正在上传） */}
-                {(uploadedImages.length + uploadingSlots.size) < 5 && (
+                {(uploadedImages.length + Array.from(uploadingSlots).filter(id => id.startsWith('temp_')).length) < 5 && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="aspect-square rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors group"
@@ -630,60 +666,60 @@ const EditImagePage = () => {
           </div>
 
           {/* 右侧显示区域 */}
-          <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
-            <div className="h-[32rem] border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center">
-              {generatedImage ? (
-                <div className="relative w-full h-full">
-                  <Image
-                    src={generatedImage}
-                    alt="Generated image"
-                    fill
-                    className="object-contain rounded-lg"
-                  />
-                </div>
-              ) : isGenerating ? (
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
+          <div className="space-y-4">
+            {/* 生成框 */}
+            <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
+              <div className="h-[32rem] border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center overflow-hidden">
+                {generatedImage ? (
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={generatedImage}
+                      alt="Generated image"
+                      fill
+                      className="object-contain rounded-lg"
+                    />
                   </div>
-                  <p className="text-white/60 text-lg mb-2">正在创作您的作品...</p>
-                  <p className="text-white/40 text-sm mb-3">{taskMessage}</p>
+                ) : isGenerating ? (
+                  <div className="text-center relative">
+                    {/* 中心loading图标 */}
+                    <div className="w-28 h-28 mx-auto relative">
+                      {/* 外圈装饰环 */}
+                      <div className="absolute inset-0 border-2 border-white/5 rounded-full"></div>
+                      <div className="absolute inset-1 border-2 border-white/10 rounded-full"></div>
 
-                  {/* 已等待时间显示 */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-center gap-2 text-white/70 mb-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-lg font-mono">
-                        已等待: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                      </span>
-                    </div>
-                    <p className="text-white/50 text-sm">
-                      预计总共需要 20-30 秒，请耐心等待
-                    </p>
-                  </div>
+                      {/* 旋转的渐变环 */}
+                      <div className="absolute inset-0 rounded-full animate-spin-slow">
+                        <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-pink-500/50 blur-sm"></div>
+                      </div>
+                      <div className="absolute inset-2 border-4 border-transparent border-t-blue-500 border-r-purple-500 border-b-pink-500 rounded-full animate-spin"></div>
 
-                  <div className="mt-4 w-32 mx-auto">
-                    <div className="w-full bg-white/10 rounded-full h-1">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${taskProgress}%` }}
-                      ></div>
+                      {/* 内部图标 */}
+                      <div className="absolute inset-4 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
+                        <Sparkles className="w-8 h-8 text-white animate-pulse" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-white" />
+                ) : (
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
                     </div>
+                    <p className="text-white/60 text-lg">Your masterpiece will be displayed here</p>
                   </div>
-                  <p className="text-white/60 text-lg">Your masterpiece will be displayed here</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
+
+            {/* 生成时长提示 - 生成框下方 */}
+            {isGenerating && (
+              <div className="text-center py-3">
+                <p className="text-white/60 text-sm">
+                  ⏱️ Estimated generation time: 20-30 seconds
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
