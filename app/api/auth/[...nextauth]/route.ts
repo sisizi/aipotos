@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import https from 'https'
+import type { Account, Profile } from 'next-auth'
 
 // 配置本地 VPN 代理
 const proxyUrl = process.env.HTTPS_PROXY || 'http://127.0.0.1:7897';
@@ -41,9 +42,9 @@ authorization: {
   }),
   ],
   callbacks: {
-    async signIn({account, profile}: any) {
+    async signIn({account, profile}: {account: Account | null, profile?: Profile}) {
       if (account?.provider === "google") {
-        return profile?.email_verified && profile?.email?.endsWith("@gmail.com")
+        return (profile as any)?.email_verified && (profile as any)?.email?.endsWith("@gmail.com")
       }
       return true;
     }
