@@ -3,7 +3,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { R2StorageService } from '@/services/r2Storage';
 import { uploadToR2 } from '@/lib/r2-simple'
 import { APIResponse, FileUploadResponse } from '@/types';
 
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
     // 获取用户ID
     const userId = formData.get('userId') as string;
     // 获取文件类型，默认为'general'
-    const fileType = formData.get('type') as string || 'general'; // 'image', 'mask', 'general'
+    // const fileType = formData.get('type') as string || 'general'; // 'image', 'mask', 'general'
 
     // 验证必需参数
     if (!file) {
@@ -113,7 +112,7 @@ export async function POST(request: NextRequest) {
  * @param request - Next.js的NextRequest对象，包含请求相关信息
  * @returns 返回一个NextResponse对象，包含上传限制的JSON响应
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 定义上传限制的配置对象
     const limits = {
@@ -149,7 +148,7 @@ export async function GET(request: NextRequest) {
  * @param request - Next.js的NextRequest对象，表示传入的请求
  * @returns 返回一个NextResponse对象，包含CORS相关的响应头
  */
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {  // 创建一个空的响应体
     status: 200,  // 设置响应状态码为200，表示成功
     headers: {  // 设置响应头，包含CORS相关的配置

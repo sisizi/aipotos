@@ -43,7 +43,7 @@ authorization: {
   callbacks: {
     async signIn({account, profile}: any) {
             if (account.provider === "google") {
-        return profile.email_verified && profile.email.endsWith("@example.com")
+        return profile.email_verified && profile.email.endsWith("@30343319083@qq.com")
       }
       return true;
     }

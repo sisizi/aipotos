@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { HttpsProxyAgent } from 'https-proxy-agent'
 import { supabaseAdmin } from "./supabase";
 
 
@@ -59,14 +58,14 @@ export const authOptions: NextAuthOptions = {
   // },
 
   callbacks: {
-    async signIn({ user, account }: any) {
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
           // 检查用户是否存在
-          const { data: existingUser, error: selectError } = await supabaseAdmin
+          const { data: existingUser } = await supabaseAdmin
             .from('users')
             .select('*')
-            .eq('user_email', user.email)
+            .eq('user_email', user.email!)
             .single();
 
           if (!existingUser) {
@@ -76,8 +75,8 @@ export const authOptions: NextAuthOptions = {
             const { error: insertError } = await supabaseAdmin
               .from('users')
               .insert({
-                user_email: user.email,
-                name: user.name,
+                user_email: user.email!,
+                name: user.name!,
                 remaining_credits: initialCredits
               });
 

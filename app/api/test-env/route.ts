@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * 处理GET请求的异步函数，用于检查环境变量的设置状态
  * @param request - Next.js的NextRequest对象，表示传入的请求
  * @returns 返回NextResponse对象，包含环境变量状态信息
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 检查R2相关的环境变量是否已设置
     const envVars = {

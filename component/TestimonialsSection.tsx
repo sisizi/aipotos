@@ -76,17 +76,19 @@ const TestimonialsSection = () => {
     if (isAutoPlaying) {
       const interval = setInterval(() => {
         setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-      }, 5000);
+      }, 15000);
       return () => clearInterval(interval);
     }
   }, [isAutoPlaying, testimonials.length]);
 
   const nextTestimonial = () => {
     setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    setIsAutoPlaying(false); // 手动切换后停止自动轮播
   };
 
   const prevTestimonial = () => {
     setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setIsAutoPlaying(false); // 手动切换后停止自动轮播
   };
 
   const currentUser = testimonials[currentTestimonial];
@@ -217,7 +219,10 @@ const TestimonialsSection = () => {
                 {testimonials.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentTestimonial(index)}
+                    onClick={() => {
+                      setCurrentTestimonial(index);
+                      setIsAutoPlaying(false); // 手动切换后停止自动轮播
+                    }}
                     className={`w-3 h-3 rounded-full transition-all duration-300 ${
                       index === currentTestimonial
                         ? 'bg-blue-500 w-8'

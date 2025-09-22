@@ -2,12 +2,13 @@
 
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 /**
  * AuthError 组件 - 用于显示登录错误信息的页面
  * 该组件会根据不同的错误类型显示相应的错误提示，并提供解决方案和重试选项
  */
-export default function AuthError() {
+function AuthErrorContent() {
   // 从URL参数中获取错误信息
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
@@ -113,5 +114,13 @@ export default function AuthError() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div>Loading...</div></div>}>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

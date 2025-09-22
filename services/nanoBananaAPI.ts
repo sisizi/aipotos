@@ -4,13 +4,11 @@
 
 import {
   GenerateImageRequest,
-  EditImageRequest,
   NanoBananaTaskResponse,
   NanoBananaTaskStatus,
   NanoBananaCreateTaskRequest,
   AIServiceError
 } from '@/types';
-import https from 'https';
 
 export class NanoBananaAPIService {
   private baseURL: string;
@@ -26,6 +24,14 @@ export class NanoBananaAPIService {
         'MISSING_API_KEY'
       );
     }
+  }
+
+  /**
+   * 获取webhook回调URL
+   */
+  private getWebhookUrl(): string {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    return `${baseUrl}/api/webhook/nano-banana`;
   }
 
   /**
@@ -53,12 +59,7 @@ export class NanoBananaAPIService {
           'User-Agent': 'PhotoGen-AI/1.0',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(data),
-        agent: new https.Agent({
-          secureProtocol: 'TLSv1_2_method',
-          ciphers: 'ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS',
-          honorCipherOrder: true,
-        })
+        body: JSON.stringify(data)
       });
 
       const responseText = await response.text();
@@ -132,12 +133,7 @@ export class NanoBananaAPIService {
           'Authorization': `Bearer ${this.apiKey}`,
           'User-Agent': 'PhotoGen-AI/1.0',
           'Accept': 'application/json',
-        },
-        agent: new https.Agent({
-          secureProtocol: 'TLSv1_2_method',
-          ciphers: 'ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS',
-          honorCipherOrder: true,
-        })
+        }
       });
 
       if (!response.ok) {
@@ -188,8 +184,8 @@ export class NanoBananaAPIService {
         output_format: 'png',
         image_size: this.mapImageSize(params.width, params.height),
       },
-      // 可选的回调URL（如果需要）
-      // callBackUrl: process.env.NANO_BANANA_CALLBACK_URL
+      // 配置webhook回调URL
+      callBackUrl: this.getWebhookUrl()
     };
 
     console.log('Creating image generation task with params:', {
@@ -232,8 +228,8 @@ export class NanoBananaAPIService {
         output_format: 'png',
         image_size: 'auto', // 保持原始尺寸
       },
-      // 可选的回调URL（如果需要）
-      // callBackUrl: process.env.NANO_BANANA_CALLBACK_URL
+      // 配置webhook回调URL
+      callBackUrl: this.getWebhookUrl()
     };
 
     console.log('Creating image editing task with params:', {
@@ -465,7 +461,7 @@ export class NanoBananaAPIService {
    * @param height 高度
    * @returns API尺寸参数
    */
-  private mapImageSize(width?: number, height?: number): string {
+  private mapImageSize(width?: number, height?: number): 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9' {
     if (!width || !height) return 'auto';
 
     const ratio = width / height;

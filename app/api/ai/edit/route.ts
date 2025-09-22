@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
 
 // 添加OPTIONS方法支持CORS（如果需要）
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

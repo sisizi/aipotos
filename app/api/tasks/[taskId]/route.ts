@@ -8,14 +8,14 @@ import { NanoBananaAPIService } from '@/services/nanoBananaAPI';
 import { APIResponse } from '@/types';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     taskId: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         const aiStatus = await nanoBananaService.getTaskStatus(task.nano_banana_task_id);
         
         // 根据AI API的状态更新本地任务状态（如果需要）
-        if (aiStatus.status === 'completed' && task.status !== 'completed') {
+        if (aiStatus.state === 'success') {
           // 这里可以添加逻辑来处理AI API已完成但本地任务未完成的情况
           console.log(`AI task ${task.nano_banana_task_id} is completed, but local task is still processing`);
         }
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // 更新任务状态（可选）
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
     const body = await request.json();
     const { userId, status, error_message } = body;
 
@@ -113,7 +113,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // 准备更新数据
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (status) updates.status = status;
     if (error_message) updates.error_message = error_message;
 
@@ -147,7 +147,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // 删除任务
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

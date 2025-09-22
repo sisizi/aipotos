@@ -9,7 +9,7 @@ export interface TaskRecord {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   input_image_url?: string;
   input_prompt: string;
-  input_params?: Record<string, any>;
+  input_params?: Record<string, unknown>;
   output_image_url?: string;
   output_image_urls?: string[];  // 支持多张输出图片
   nano_banana_task_id?: string;
@@ -86,7 +86,7 @@ export interface NanoBananaResponse {
   message?: string;
 }
 
-export interface APIResponse<T = any> {
+export interface APIResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -214,7 +214,7 @@ export class AIServiceError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'AIServiceError';
@@ -225,7 +225,7 @@ export class DatabaseError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'DatabaseError';
@@ -236,7 +236,7 @@ export class StorageError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'StorageError';

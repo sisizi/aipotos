@@ -9,10 +9,10 @@ import { APIResponse, TaskProgress } from '@/types';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const { taskId } = params;
+    const { taskId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -38,9 +38,9 @@ export async function GET(
     }
 
     // 构建任务进度响应
-    let taskProgress: TaskProgress = {
+    const taskProgress: TaskProgress = {
       taskId: dbTask.id,
-      status: dbTask.status as any,
+      status: dbTask.status as 'pending' | 'processing' | 'completed' | 'failed',
       message: getStatusMessage(dbTask.status),
       processingTime: dbTask.processing_time,
     };
@@ -51,11 +51,11 @@ export async function GET(
         const aiTaskStatus = await nanoBananaService.getTaskStatus(dbTask.nano_banana_task_id);
 
         // 根据AI任务状态更新本地任务状态
-        if (aiTaskStatus.state === 'success' && dbTask.status !== 'completed') {
+        if (aiTaskStatus.state === 'success') {
           // AI任务已完成但本地状态未更新，可能是后台处理还未完成
           taskProgress.message = '任务已完成，正在保存结果...';
           taskProgress.progress = 90;
-        } else if (aiTaskStatus.state === 'fail' && dbTask.status !== 'failed') {
+        } else if (aiTaskStatus.state === 'fail') {
           // AI任务失败但本地状态未更新
           taskProgress.status = 'failed';
           taskProgress.message = aiTaskStatus.failMsg || '任务处理失败';
@@ -131,7 +131,7 @@ function getStatusMessage(status: string): string {
 }
 
 // 支持OPTIONS请求
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

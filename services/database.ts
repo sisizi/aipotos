@@ -84,7 +84,7 @@ export class DatabaseService {
       console.log(`Updating task ${taskId}:`, updates);
       
       // 构建更新数据对象，只包含提供的字段
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       // 只更新提供的字段
       if (updates.status !== undefined) updateData.status = updates.status;
@@ -367,6 +367,50 @@ export class DatabaseService {
         `Unexpected error getting recent tasks: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'UNKNOWN_ERROR',
         { error, userId, limit }
+      );
+    }
+  }
+
+  /**
+   * 根据Nano Banana任务ID获取本地任务
+   * @param nanoBananaTaskId Nano Banana任务ID
+   * @returns 任务数据
+   */
+  async getTaskByNanoBananaId(nanoBananaTaskId: string): Promise<TaskRecord | null> {
+    try {
+      console.log(`Getting task by Nano Banana ID: ${nanoBananaTaskId}`);
+
+      const { data, error } = await supabaseAdmin
+        .from('tasks')
+        .select('*')
+        .eq('nano_banana_task_id', nanoBananaTaskId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // 记录不存在
+          console.log(`Task with Nano Banana ID ${nanoBananaTaskId} not found`);
+          return null;
+        }
+        console.error('Database error getting task by Nano Banana ID:', error);
+        throw new DatabaseError(
+          `Failed to get task by Nano Banana ID: ${error.message}`,
+          error.code,
+          { error, nanoBananaTaskId }
+        );
+      }
+
+      console.log(`Task found for Nano Banana ID ${nanoBananaTaskId}: ${data.id}`);
+      return data;
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        throw error;
+      }
+      console.error('Error getting task by Nano Banana ID:', error);
+      throw new DatabaseError(
+        `Unexpected error getting task by Nano Banana ID: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'UNKNOWN_ERROR',
+        { error, nanoBananaTaskId }
       );
     }
   }

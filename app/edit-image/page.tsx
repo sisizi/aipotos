@@ -285,7 +285,8 @@ const EditImagePage = () => {
               </button>
             </div>
 
-            {/* 参考图片上传区域 */}
+            {/* 参考图片上传区域 - 在Create模式下隐藏 */}
+            {selectedTab === 'edit' && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Reference Images (up to 5)</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -330,6 +331,7 @@ const EditImagePage = () => {
                 className="hidden"
               />
             </div>
+            )}
 
             {/* 描述输入区域 */}
             <div className="space-y-4">
@@ -405,7 +407,7 @@ const EditImagePage = () => {
                     className="object-contain rounded-lg"
                   />
                   {/* 添加下载按钮 */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <a
                       href={generatedImage}
                       download="generated-image.jpg"
@@ -413,7 +415,7 @@ const EditImagePage = () => {
                     >
                       <Download className="w-4 h-4 text-white" />
                     </a>
-                  </div>
+                  </div> */}
                 </div>
               ) : isGenerating ? (
                 <div className="text-center">

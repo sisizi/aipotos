@@ -110,8 +110,11 @@ export async function POST(request: NextRequest) {
     console.log(`Starting async image generation for user ${userId}`);
     console.log(`Prompt: "${prompt.substring(0, 100)}..."`);
 
+    const taskStartTime = Date.now();
+
     try {
-      // 1. 创建数据库任务记录
+      // 1. 快速创建数据库任务记录（只包含基本信息）
+      const dbStartTime = Date.now();
       const dbTaskId = await dbService.createTask({
         user_id: userId,
         task_type: 'generate',
@@ -120,44 +123,68 @@ export async function POST(request: NextRequest) {
         input_params: otherParams,
       });
 
-      console.log(`Created database task ${dbTaskId}`);
+      const dbEndTime = Date.now();
+      console.log(`Created database task ${dbTaskId} in ${dbEndTime - dbStartTime}ms`);
 
-      // 2. 创建Nano Banana任务
-      const nanoBananaTaskId = await nanoBananaService.createGenerateTask({
-        prompt,
-        width: otherParams.width,
-        height: otherParams.height,
-        steps: otherParams.steps,
-        guidance_scale: otherParams.guidance_scale,
-        seed: otherParams.seed,
-        style: otherParams.style,
-      });
-
-      console.log(`Created Nano Banana task: ${nanoBananaTaskId}`);
-
-      // 3. 更新数据库记录，保存AI任务ID
-      await dbService.updateTask(dbTaskId, {
-        status: 'processing',
-        nano_banana_task_id: nanoBananaTaskId,
-      });
-
-      // 4. 立即返回任务ID，不等待完成
-      const response: TaskCreationResponse = {
+      // 2. 立即返回任务ID，让用户看到进度
+      const quickResponse: TaskCreationResponse = {
         success: true,
         taskId: dbTaskId,
-        message: '任务已创建，正在处理中...',
-        estimatedTime: 60, // 预估60秒
+        message: '任务已创建，正在初始化...',
+        estimatedTime: 60,
       };
 
-      // 5. 异步处理任务完成（不阻塞响应）
-      processTaskInBackground(dbTaskId, nanoBananaTaskId, userId, dbService, nanoBananaService, r2Service)
-        .catch(error => {
-          console.error(`Background task processing failed for task ${dbTaskId}:`, error);
-        });
+      // 3. 异步创建Nano Banana任务（不阻塞响应）
+      const asyncTaskCreation = async () => {
+        try {
+          const apiStartTime = Date.now();
+          const nanoBananaTaskId = await nanoBananaService.createGenerateTask({
+            prompt,
+            width: otherParams.width,
+            height: otherParams.height,
+            steps: otherParams.steps,
+            guidance_scale: otherParams.guidance_scale,
+            seed: otherParams.seed,
+            style: otherParams.style,
+          });
+
+          const apiEndTime = Date.now();
+          console.log(`Created Nano Banana task: ${nanoBananaTaskId} in ${apiEndTime - apiStartTime}ms`);
+
+          // 4. 更新数据库记录
+          const updateStartTime = Date.now();
+          await dbService.updateTask(dbTaskId, {
+            status: 'processing',
+            nano_banana_task_id: nanoBananaTaskId,
+          });
+
+          const updateEndTime = Date.now();
+          const totalTime = updateEndTime - taskStartTime;
+          console.log(`Updated database in ${updateEndTime - updateStartTime}ms`);
+          console.log(`🎯 Total task creation time: ${totalTime}ms`);
+
+          // 5. 启动后台处理
+          processTaskInBackground(dbTaskId, nanoBananaTaskId, userId, dbService, nanoBananaService, r2Service)
+            .catch(error => {
+              console.error(`Background task processing failed for task ${dbTaskId}:`, error);
+            });
+
+        } catch (error) {
+          console.error('Async task creation failed:', error);
+          // 更新任务状态为失败
+          await dbService.updateTask(dbTaskId, {
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Task initialization failed',
+          });
+        }
+      };
+
+      // 不等待异步创建完成就返回响应
+      asyncTaskCreation();
 
       return NextResponse.json({
         success: true,
-        data: response,
+        data: quickResponse,
         message: 'Image generation task created successfully',
       } as APIResponse, { status: 200 });
 
@@ -177,7 +204,7 @@ export async function POST(request: NextRequest) {
 }
 
 // 添加OPTIONS方法支持CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

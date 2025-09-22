@@ -18,7 +18,7 @@ export interface DatabaseTaskRecord {
   status: 'pending' | 'processing' | 'completed' | 'failed';
   input_image_url?: string;
   input_prompt: string;
-  input_params?: Record<string, any>;
+  input_params?: Record<string, unknown>;
   output_image_url?: string;
   nano_banana_task_id?: string;
   processing_time?: number;
@@ -38,7 +38,7 @@ export interface DatabaseResponse<T> {
   error: {
     message: string;
     code?: string;
-    details?: any;
+    details?: unknown;
   } | null;
 }
 
@@ -47,7 +47,7 @@ export interface DatabaseListResponse<T> {
   error: {
     message: string;
     code?: string;
-    details?: any;
+    details?: unknown;
   } | null;
   count?: number;
 }

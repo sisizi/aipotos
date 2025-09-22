@@ -1,8 +1,4 @@
-import { bootstrap } from 'global-agent';
 import type { NextConfig } from "next";
-
-bootstrap();
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
@@ -30,13 +26,20 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'filles.siifre.com',
+        port: '',
+        pathname: '/**'
+      },
     ],
+    unoptimized:true
   },
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
+  // api: {
+  //   bodyParser: {
+  //     sizeLimit: '10mb',
+  //   },
+  // },
 };
 
 export default nextConfig;

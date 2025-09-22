@@ -1,5 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // 验证必需的环境变量
 if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY || !process.env.R2_ACCOUNT_ID || !process.env.R2_BUCKET_USER_UPLOADS) {
@@ -42,15 +41,11 @@ export async function uploadToR2(file: File): Promise<string> {
 
     // 发送上传命令到R2
     await r2Client.send(command);
-    
-    // 生成预签名URL用于公开访问
-    const getCommand = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: fileName,
-    });
-    // 创建7天有效期的预签名URL
-    const signedUrl = await getSignedUrl(r2Client, getCommand, { expiresIn: 3600 * 24 * 7 }); // 7天有效期
-    return signedUrl;
+
+    // 使用公开URL而不是预签名URL
+    const publicUrl = process.env.R2_PUBLIC_URL ||
+      `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+    return `${publicUrl}/${fileName}`;
   } catch (error) {
     // 捕获并处理上传过程中的错误
     console.error('R2上传错误:', error);
