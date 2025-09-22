@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, Copy, Sparkles, ArrowLeft, Download, Share2, Clock } from 'lucide-react';
+import { Copy, Sparkles, Download, Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 

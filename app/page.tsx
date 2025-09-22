@@ -1,10 +1,10 @@
-import Header from '../component/Header';
-import HeroSection from '../component/HeroSection';
-import UseCasesSection from '../component/UseCasesSection';
-import ProModelSection from '../component/ProModelSection';
-import TestimonialsSection from '../component/TestimonialsSection';
-import Footer from '../component/Footer';
-import MouseParticles from '../component/MouseParticles';
+import Header from '@/component/Header';
+import HeroSection from '@/component/HeroSection';
+import UseCasesSection from '@/component/UseCasesSection';
+import ProModelSection from '@/component/ProModelSection';
+import TestimonialsSection from '@/component/TestimonialsSection';
+import Footer from '@/component/Footer';
+import MouseParticles from '@/component/MouseParticles';
 
 export default function Home() {
   return (
