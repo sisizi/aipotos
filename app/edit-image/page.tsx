@@ -463,7 +463,11 @@ const EditImagePage = () => {
   };
 
   return (
-    <div className="min-h-screen text-white" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
+    <div className="min-h-screen w-full text-white" style={{
+      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
+      backgroundAttachment: 'fixed',
+      backgroundSize: '100% 100%'
+    }}>
       {/* 鼠标粒子效果 */}
       <MouseParticles />
 
@@ -638,31 +642,6 @@ const EditImagePage = () => {
               {isGenerating ? 'Processing...' : 'Generate Now'}
             </button>
 
-            {/* 任务进度显示 */}
-            {isGenerating && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm text-white/70">
-                  <span>{taskMessage}</span>
-                  {estimatedTimeLeft > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {estimatedTimeLeft}s
-                    </span>
-                  )}
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${taskProgress}%` }}
-                  ></div>
-                </div>
-                {currentTaskId && (
-                  <div className="text-xs text-white/50">
-                    Task ID: {currentTaskId}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* 右侧显示区域 */}
@@ -680,9 +659,9 @@ const EditImagePage = () => {
                     />
                   </div>
                 ) : isGenerating ? (
-                  <div className="text-center relative">
+                  <div className="text-center relative w-full h-full flex flex-col items-center justify-center">
                     {/* 中心loading图标 */}
-                    <div className="w-28 h-28 mx-auto relative">
+                    <div className="w-28 h-28 mx-auto relative mb-8">
                       {/* 外圈装饰环 */}
                       <div className="absolute inset-0 border-2 border-white/5 rounded-full"></div>
                       <div className="absolute inset-1 border-2 border-white/10 rounded-full"></div>
@@ -697,6 +676,30 @@ const EditImagePage = () => {
                       <div className="absolute inset-4 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
                         <Sparkles className="w-8 h-8 text-white animate-pulse" />
                       </div>
+                    </div>
+
+                    {/* 任务进度显示 */}
+                    <div className="w-full max-w-md space-y-3">
+                      <div className="flex items-center justify-between text-sm text-white/70">
+                        <span>{taskMessage}</span>
+                        {estimatedTimeLeft > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {estimatedTimeLeft}s
+                          </span>
+                        )}
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${taskProgress}%` }}
+                        ></div>
+                      </div>
+                      {currentTaskId && (
+                        <div className="text-xs text-white/50 text-center">
+                          Task ID: {currentTaskId}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
