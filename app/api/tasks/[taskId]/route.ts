@@ -39,22 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       } as APIResponse, { status: 404 });
     }
 
-    // 如果任务正在处理中，可以检查AI API的状态
-    if (task.status === 'processing' && task.nano_banana_task_id) {
-      try {
-        const nanoBananaService = new NanoBananaAPIService();
-        const aiStatus = await nanoBananaService.getTaskStatus(task.nano_banana_task_id);
-        
-        // 根据AI API的状态更新本地任务状态（如果需要）
-        if (aiStatus.state === 'success') {
-          // 这里可以添加逻辑来处理AI API已完成但本地任务未完成的情况
-          console.log(`AI task ${task.nano_banana_task_id} is completed, but local task is still processing`);
-        }
-      } catch (aiError) {
-        console.warn('Failed to check AI task status:', aiError);
-        // 不抛出错误，继续返回本地任务状态
-      }
-    }
+    // 任务状态现在通过webhook更新，不需要轮询检查
 
     // 返回任务详情
     return NextResponse.json({

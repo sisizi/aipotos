@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Copy, Sparkles, Download, Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import MouseParticles from '@/component/MouseParticles';
 
 /**
  * 编辑图片页面组件 - 支持异步任务处理
@@ -25,9 +24,7 @@ const EditImagePage = () => {
   const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number>(0); // 预估剩余时间
   const [elapsedTime, setElapsedTime] = useState<number>(0); // 已经过时间
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null); // 任务开始时间
-  const [uploadingSlots, setUploadingSlots] = useState<Set<string>>(new Set()); // 正在上传的图片URL
-  const [isUsingWebhook, setIsUsingWebhook] = useState<boolean>(false); // 是否正在使用webhook
-  const [webhookTimeout, setWebhookTimeout] = useState<NodeJS.Timeout | null>(null); // webhook超时定时器
+  const [uploadingSlots, setUploadingSlots] = useState<Set<number>>(new Set()); // 正在上传的slot索引
   const fileInputRef = useRef<HTMLInputElement>(null); // 文件输入框的引用
 
 
@@ -42,7 +39,7 @@ const EditImagePage = () => {
     setUserId(storedUserId);
   }, []);
 
-  // 正向计时器 - 显示已等待时间
+  // 计时器 - 显示已等待时间和超时提示
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -51,6 +48,14 @@ const EditImagePage = () => {
         const now = Date.now();
         const elapsed = Math.floor((now - taskStartTime) / 1000);
         setElapsedTime(elapsed);
+
+        // 10分钟后显示超时警告
+        if (elapsed >= 600) { // 10分钟 = 600秒
+          setTaskMessage('任务处理超时，正在自动标记为失败...');
+        } else if (elapsed >= 480) { // 8分钟后开始警告
+          const remaining = 600 - elapsed;
+          setTaskMessage(`任务将在 ${remaining} 秒后超时，请耐心等待...`);
+        }
       }, 1000);
     }
 
@@ -61,21 +66,11 @@ const EditImagePage = () => {
     };
   }, [isGenerating, taskStartTime]);
 
-
-  // 清理webhook和定时器
-  useEffect(() => {
-    return () => {
-      if (webhookTimeout) {
-        clearTimeout(webhookTimeout);
-      }
-    };
-  }, [webhookTimeout]);
-
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || !userId) {
       if (!userId) {
-        alert('Initializing user information, please try again later');
+        alert('正在初始化用户信息，请稍后重试');
       }
       return;
     }
@@ -83,20 +78,22 @@ const EditImagePage = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.size > 10 * 1024 * 1024) { // 改为10MB限制，与API一致
-        alert('Image size cannot exceed 10MB');
+        alert('图片大小不能超过10MB');
         continue;
       }
 
       if (uploadedImages.length + i >= 5) {
-        alert('Maximum 5 images allowed');
+        alert('最多只能上传5张图片');
         break;
       }
 
-      // 生成临时ID用于跟踪上传状态
-      const tempId = `temp_${Date.now()}_${i}`;
+      // 计算当前上传slot的索引
+      const currentSlotIndex = uploadedImages.length + i;
 
-      // 立即显示loading状态
-      setUploadingSlots(prev => new Set([...prev, tempId]));
+      // 2秒后显示loading状态
+      const loadingTimeout = setTimeout(() => {
+        setUploadingSlots(prev => new Set([...prev, currentSlotIndex]));
+      }, 2000);
 
       // 上传到Cloudflare R2
       try {
@@ -110,155 +107,167 @@ const EditImagePage = () => {
           body: formData,
         });
 
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            const imageUrl = result.data.url;
+        // 清除loading timeout
+        clearTimeout(loadingTimeout);
 
-            // 上传成功后，添加图片URL，并将loading状态转移到真实URL
-            setUploadedImages(prev => [...prev, imageUrl].slice(0, 5));
-            setUploadingSlots(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(tempId);
-              newSet.add(imageUrl);
-              return newSet;
-            });
-            console.log('Upload successful:', imageUrl);
-
-            // 预加载图片，等图片加载完成后再移除loading
-            const img = new window.Image();
-            img.onload = () => {
-              // 图片加载完成，移除loading状态
-              setUploadingSlots(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(imageUrl);
-                return newSet;
-              });
-            };
-            img.onerror = () => {
-              // 图片加载失败，也移除loading状态
-              setUploadingSlots(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(imageUrl);
-                return newSet;
-              });
-              console.error('Image load failed');
-            };
-            img.src = imageUrl;
-          } else {
-            console.error('Upload failed:', result.error || 'Unknown error');
-            alert(`Upload failed: ${result.error || 'Unknown error'}`);
-            // 移除loading状态
-            setUploadingSlots(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(tempId);
-              return newSet;
-            });
-          }
-        } else {
-          const errorText = await response.text();
-          console.error('Upload failed:', errorText);
-          alert(`Upload failed: ${errorText}`);
-          // 移除loading状态
-          setUploadingSlots(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(tempId);
-            return newSet;
-          });
-        }
-      } catch (error) {
         // 移除loading状态
         setUploadingSlots(prev => {
           const newSet = new Set(prev);
-          newSet.delete(tempId);
+          newSet.delete(currentSlotIndex);
           return newSet;
         });
 
-        console.error('Upload error:', error);
-        alert(`Upload error: ${error instanceof Error ? error.message : 'Network error'}`);
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setUploadedImages(prev => [...prev, result.data.url].slice(0, 5));
+            console.log('上传成功:', result.data.url);
+          } else {
+            console.error('上传失败:', result.error || '未知错误');
+            alert(`上传失败: ${result.error || '未知错误'}`);
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('上传失败:', errorText);
+          alert(`上传失败: ${errorText}`);
+        }
+      } catch (error) {
+        // 清除loading timeout和状态
+        clearTimeout(loadingTimeout);
+        setUploadingSlots(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(currentSlotIndex);
+          return newSet;
+        });
+
+        console.error('上传错误:', error);
+        alert(`上传错误: ${error instanceof Error ? error.message : '网络错误'}`);
       }
     }
   };
 
-  // 轮询任务状态
-  const pollTaskStatus = async (taskId: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`/api/tasks/${taskId}/status?userId=${userId}`);
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          const { taskProgress: progress, task } = result.data;
+  // 使用SSE监听任务状态更新
+  const startTaskSSE = (taskId: string) => {
+    setCurrentTaskId(taskId);
+    setTaskProgress(10);
+    setTaskMessage('任务已创建，正在处理中...');
 
+    // 创建EventSource连接
+    const eventSource = new EventSource(`/api/tasks/${taskId}/webhook?userId=${userId}`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'status' && data.taskProgress) {
+          const progress = data.taskProgress;
           setTaskProgress(progress.progress || 0);
           setTaskMessage(progress.message || '');
           setEstimatedTimeLeft(progress.estimatedTimeLeft || 0);
+        }
 
-          if (progress.status === 'completed' && task.output_image_url) {
-            // 任务完成
+        if (data.type === 'error') {
+          console.error('SSE错误:', data.error);
+          eventSource.close();
+          setIsGenerating(false);
+          setCurrentTaskId(null);
+          setTaskStartTime(null);
+          alert(`任务失败: ${data.error}`);
+        }
+
+        if (data.type === 'timeout') {
+          console.log('SSE超时，任务可能仍在处理中');
+          eventSource.close();
+          // SSE超时后，继续等待webhook通知
+          setTaskMessage('网络连接中断，但任务仍在处理中，请稍后...');
+        }
+
+        // 检查任务是否完成
+        if (data.task && data.task.status === 'completed') {
+          eventSource.close();
+          setGeneratedImage(data.task.output_image_url);
+          setIsGenerating(false);
+          setCurrentTaskId(null);
+          setTaskProgress(100);
+          setTaskMessage('任务完成！');
+          setTaskStartTime(null);
+          console.log('图像生成完成:', data.task.output_image_url);
+        } else if (data.task && data.task.status === 'failed') {
+          eventSource.close();
+          setIsGenerating(false);
+          setCurrentTaskId(null);
+          setTaskStartTime(null);
+          alert(`任务失败: ${data.task.error_message || '未知错误'}`);
+        }
+
+      } catch (error) {
+        console.error('解析SSE数据失败:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE连接错误:', error);
+      eventSource.close();
+      // 发生错误时，继续等待webhook通知
+      setTaskMessage('网络连接中断，但任务仍在处理中，请稍后...');
+    };
+
+    // 11分钟后自动关闭SSE连接（略长于任务超时）
+    setTimeout(() => {
+      if (eventSource.readyState !== EventSource.CLOSED) {
+        eventSource.close();
+        if (currentTaskId === taskId) {
+          // 检查任务状态，如果超时则显示对应消息
+          checkFinalTaskStatus(taskId);
+        }
+      }
+    }, 11 * 60 * 1000); // 11分钟
+
+    return eventSource;
+  };
+
+  // 查询任务最终状态（webhook模式下仅用于超时检查）
+  const checkFinalTaskStatus = async (taskId: string) => {
+    try {
+      const taskResponse = await fetch(`/api/tasks/${taskId}?userId=${userId}`);
+      if (taskResponse.ok) {
+        const taskResult = await taskResponse.json();
+        if (taskResult.success && taskResult.data) {
+          const task = taskResult.data;
+          if (task.status === 'completed' && task.output_image_url) {
             setGeneratedImage(task.output_image_url);
             setIsGenerating(false);
             setCurrentTaskId(null);
             setTaskProgress(100);
-            setTaskMessage('Task completed!');
+            setTaskMessage('任务完成！');
             setTaskStartTime(null);
             console.log('图像生成完成:', task.output_image_url);
-            return false; // 停止轮询
-          } else if (progress.status === 'failed') {
-            // 任务失败
+          } else if (task.status === 'failed') {
             setIsGenerating(false);
             setCurrentTaskId(null);
             setTaskStartTime(null);
-            alert(`Task failed: ${progress.message}`);
-            return false; // 停止轮询
+            const errorMsg = task.error_message || '未知错误';
+            if (errorMsg.includes('timed out')) {
+              alert('任务超时（10分钟），AI服务没有及时响应，请稍后重试');
+            } else {
+              alert(`任务失败: ${errorMsg}`);
+            }
+          } else {
+            // 任务仍在进行中（但SSE连接已断开）
+            setIsGenerating(false);
+            setCurrentTaskId(null);
+            setTaskStartTime(null);
+            alert('任务仍在处理中，但网络连接中断。请稍后刷新页面查看结果。');
           }
-
-          return true; // 继续轮询
         }
       }
     } catch (error) {
       console.error('查询任务状态失败:', error);
+      setIsGenerating(false);
+      setCurrentTaskId(null);
+      setTaskStartTime(null);
+      alert('网络错误，无法检查任务状态。请稍后刷新页面重试。');
     }
-    return true; // 遇到错误时继续轮询
-  };
-
-  // 开始轮询任务状态
-  const startTaskPolling = (taskId: string) => {
-    // 如果正在使用webhook，不启动轮询
-    if (isUsingWebhook) {
-      console.log('正在使用webhook，跳过轮询');
-      return;
-    }
-
-    console.log('开始轮询模式');
-    setCurrentTaskId(taskId);
-    if (taskProgress === 0) {
-      setTaskProgress(10);
-      setTaskMessage('Task created, processing...');
-    }
-
-    const pollInterval = setInterval(async () => {
-      // 如果切换到webhook模式，停止轮询
-      if (isUsingWebhook) {
-        clearInterval(pollInterval);
-        return;
-      }
-
-      const shouldContinue = await pollTaskStatus(taskId);
-      if (!shouldContinue) {
-        clearInterval(pollInterval);
-      }
-    }, 2000); // 每2秒轮询一次
-
-    // 5分钟后自动停止轮询
-    setTimeout(() => {
-      clearInterval(pollInterval);
-      if (currentTaskId === taskId && !isUsingWebhook) {
-        setIsGenerating(false);
-        setCurrentTaskId(null);
-        setTaskStartTime(null);
-        alert('Task processing timeout, please check manually later');
-      }
-    }, 300000);
   };
 
   const handleGenerate = async () => {
@@ -312,28 +321,24 @@ const EditImagePage = () => {
         const result = await response.json();
         if (result.success && result.data && result.data.taskId) {
           console.log('任务创建成功:', result.data.taskId);
-          setCurrentTaskId(result.data.taskId);
-          setTaskProgress(10);
-          setTaskMessage('Task created, processing...');
-
-          // 先尝试使用webhook，15秒后自动切换到轮询
-          setupWebhookListener(result.data.taskId);
+          // 开始SSE监听任务状态
+          startTaskSSE(result.data.taskId);
         } else {
           console.error('任务创建失败:', result.error || '未知错误');
-          alert(`Task creation failed: ${result.error || 'Unknown error'}`);
+          alert(`任务创建失败: ${result.error || '未知错误'}`);
           setIsGenerating(false);
           setTaskStartTime(null);
         }
       } else {
         const errorText = await response.text();
         console.error('任务创建失败:', errorText);
-        alert(`Task creation failed: ${errorText}`);
+        alert(`任务创建失败: ${errorText}`);
         setIsGenerating(false);
         setTaskStartTime(null);
       }
     } catch (error) {
       console.error('任务创建失败:', error);
-      alert(`Task creation failed: ${error instanceof Error ? error.message : 'Network error'}`);
+      alert(`任务创建失败: ${error instanceof Error ? error.message : '网络错误'}`);
       setIsGenerating(false);
       setTaskStartTime(null);
     }
@@ -343,134 +348,8 @@ const EditImagePage = () => {
     navigator.clipboard.writeText(prompt);
   };
 
-  const handleDownload = async () => {
-    if (!generatedImage) {
-      alert('No image available for download, please generate an image first');
-      return;
-    }
-
-    try {
-      // 使用代理API下载图片，避免CORS问题
-      const response = await fetch('/api/download-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageUrl: generatedImage,
-          userId: userId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('下载请求失败');
-      }
-
-      // 获取图片数据
-      const blob = await response.blob();
-
-      // 创建下载链接
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-
-      // 生成文件名，包含时间戳
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      link.download = `ai-generated-image-${timestamp}.jpg`;
-
-      // 触发下载
-      document.body.appendChild(link);
-      link.click();
-
-      // 清理
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      console.log('图片下载成功');
-    } catch (error) {
-      console.error('下载失败:', error);
-      alert('Download failed, please try again later');
-    }
-  };
-
-  // 设置webhook监听
-  const setupWebhookListener = (taskId: string) => {
-    setIsUsingWebhook(true);
-
-    // 创建EventSource连接
-    const eventSource = new EventSource(`/api/tasks/${taskId}/webhook?userId=${userId}`);
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.taskProgress) {
-          const { taskProgress: progress, task } = data;
-
-          setTaskProgress(progress.progress || 0);
-          setTaskMessage(progress.message || '');
-          setEstimatedTimeLeft(progress.estimatedTimeLeft || 0);
-
-          if (progress.status === 'completed' && task.output_image_url) {
-            // 任务完成
-            setGeneratedImage(task.output_image_url);
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskProgress(100);
-            setTaskMessage('Task completed!');
-            setTaskStartTime(null);
-            setIsUsingWebhook(false);
-            eventSource.close();
-            console.log('图像生成完成:', task.output_image_url);
-          } else if (progress.status === 'failed') {
-            // 任务失败
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskStartTime(null);
-            setIsUsingWebhook(false);
-            eventSource.close();
-            alert(`Task failed: ${progress.message}`);
-          }
-        }
-      } catch (error) {
-        console.error('解析webhook数据失败:', error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error('Webhook连接错误:', error);
-      eventSource.close();
-      setIsUsingWebhook(false);
-      if (webhookTimeout) {
-        clearTimeout(webhookTimeout);
-        setWebhookTimeout(null);
-      }
-      // 如果webhook失败，立即切换到轮询
-      startTaskPolling(taskId);
-    };
-
-    // 15秒后自动切换到轮询
-    const timeout = setTimeout(() => {
-      console.log('15秒已过，切换到轮询模式');
-      eventSource.close();
-      setIsUsingWebhook(false);
-      setWebhookTimeout(null);
-      startTaskPolling(taskId);
-    }, 15000);
-
-    setWebhookTimeout(timeout);
-
-    return eventSource;
-  };
-
   return (
-    <div className="min-h-screen w-full text-white" style={{
-      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
-      backgroundAttachment: 'fixed',
-      backgroundSize: '100% 100%'
-    }}>
-      {/* 鼠标粒子效果 */}
-      <MouseParticles />
-
+    <div className="min-h-screen text-white" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
       {/* 顶部导航 */}
       <div className="border-b border-white/10 backdrop-blur-md" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -486,24 +365,11 @@ const EditImagePage = () => {
             </Link>
 
             <div className="flex items-center gap-4 -mr-8">
-              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center cursor-pointer">
+              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center">
                 <Share2 className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
               </button>
-              <button
-                onClick={handleDownload}
-                disabled={!generatedImage}
-                className={`w-10 h-10 rounded-full border transition-colors group flex items-center justify-center cursor-pointer ${
-                  generatedImage
-                    ? 'border-white/20 hover:bg-white/5'
-                    : 'border-white/10 cursor-not-allowed opacity-50'
-                }`}
-                title={generatedImage ? 'Download generated image' : 'Please generate an image first'}
-              >
-                <Download className={`w-4 h-4 transition-colors ${
-                  generatedImage
-                    ? 'group-hover:text-blue-400'
-                    : 'text-white/30'
-                }`} />
+              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center">
+                <Download className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
               </button>
             </div>
           </div>
@@ -518,7 +384,7 @@ const EditImagePage = () => {
             <div className="flex gap-2 justify-center">
               <button
                 onClick={() => setSelectedTab('edit')}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 cursor-pointer ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
                   selectedTab === 'edit'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -529,7 +395,7 @@ const EditImagePage = () => {
               </button>
               <button
                 onClick={() => setSelectedTab('create')}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 cursor-pointer ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
                   selectedTab === 'create'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -556,35 +422,28 @@ const EditImagePage = () => {
                         height={200}
                         className="w-full h-full object-cover"
                       />
-                      {/* 如果图片正在加载，显示loading遮罩 */}
-                      {uploadingSlots.has(image) && (
-                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
-                          <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                          <div className="text-xs text-blue-400">Loading...</div>
-                        </div>
-                      )}
                     </div>
                     <button
                       onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600 transition-colors cursor-pointer"
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600 transition-colors"
                     >
                       ×
                     </button>
                   </div>
                 ))}
 
-                {/* 显示正在上传但还没有URL的loading状态 */}
-                {Array.from(uploadingSlots).filter(id => id.startsWith('temp_')).map((tempId) => (
-                  <div key={`loading-${tempId}`} className="relative group">
+                {/* 显示正在上传的loading状态 */}
+                {Array.from(uploadingSlots).map((slotIndex) => (
+                  <div key={`loading-${slotIndex}`} className="relative group">
                     <div className="aspect-square rounded-lg border-2 border-dashed border-blue-400/50 flex flex-col items-center justify-center bg-blue-500/10">
                       <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <div className="text-xs text-blue-400">Uploading...</div>
+                      <div className="text-xs text-blue-400">上传中...</div>
                     </div>
                   </div>
                 ))}
 
                 {/* 显示添加按钮（如果还有空位且没有正在上传） */}
-                {(uploadedImages.length + Array.from(uploadingSlots).filter(id => id.startsWith('temp_')).length) < 5 && (
+                {(uploadedImages.length + uploadingSlots.size) < 5 && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
                     className="aspect-square rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors group"
@@ -613,7 +472,7 @@ const EditImagePage = () => {
                 <label className="text-lg font-semibold">What changes would you like to make?</label>
                 <button
                   onClick={copyPrompt}
-                  className="p-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors cursor-pointer"
+                  className="p-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -636,93 +495,104 @@ const EditImagePage = () => {
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !prompt.trim()}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-blue-500/50 disabled:to-purple-600/50 disabled:cursor-not-allowed rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-blue-500/50 disabled:to-purple-600/50 disabled:cursor-not-allowed rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25"
             >
               <Sparkles className="w-5 h-5" />
               {isGenerating ? 'Processing...' : 'Generate Now'}
             </button>
 
-          </div>
-
-          {/* 右侧显示区域 */}
-          <div className="space-y-4">
-            {/* 生成框 */}
-            <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
-              <div className="h-[32rem] border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center overflow-hidden">
-                {generatedImage ? (
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={generatedImage}
-                      alt="Generated image"
-                      fill
-                      className="object-contain rounded-lg"
-                    />
-                  </div>
-                ) : isGenerating ? (
-                  <div className="text-center relative w-full h-full flex flex-col items-center justify-center">
-                    {/* 中心loading图标 */}
-                    <div className="w-28 h-28 mx-auto relative mb-8">
-                      {/* 外圈装饰环 */}
-                      <div className="absolute inset-0 border-2 border-white/5 rounded-full"></div>
-                      <div className="absolute inset-1 border-2 border-white/10 rounded-full"></div>
-
-                      {/* 旋转的渐变环 */}
-                      <div className="absolute inset-0 rounded-full animate-spin-slow">
-                        <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-pink-500/50 blur-sm"></div>
-                      </div>
-                      <div className="absolute inset-2 border-4 border-transparent border-t-blue-500 border-r-purple-500 border-b-pink-500 rounded-full animate-spin"></div>
-
-                      {/* 内部图标 */}
-                      <div className="absolute inset-4 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/25">
-                        <Sparkles className="w-8 h-8 text-white animate-pulse" />
-                      </div>
-                    </div>
-
-                    {/* 任务进度显示 */}
-                    <div className="w-full max-w-md space-y-3">
-                      <div className="flex items-center justify-between text-sm text-white/70">
-                        <span>{taskMessage}</span>
-                        {estimatedTimeLeft > 0 && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {estimatedTimeLeft}s
-                          </span>
-                        )}
-                      </div>
-                      <div className="w-full bg-white/10 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${taskProgress}%` }}
-                        ></div>
-                      </div>
-                      {currentTaskId && (
-                        <div className="text-xs text-white/50 text-center">
-                          Task ID: {currentTaskId}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <p className="text-white/60 text-lg">Your masterpiece will be displayed here</p>
+            {/* 任务进度显示 */}
+            {isGenerating && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm text-white/70">
+                  <span>{taskMessage}</span>
+                  {estimatedTimeLeft > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {estimatedTimeLeft}s
+                    </span>
+                  )}
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${taskProgress}%` }}
+                  ></div>
+                </div>
+                {currentTaskId && (
+                  <div className="text-xs text-white/50">
+                    Task ID: {currentTaskId}
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* 生成时长提示 - 生成框下方 */}
-            {isGenerating && (
-              <div className="text-center py-3">
-                <p className="text-white/60 text-sm">
-                  ⏱️ Estimated generation time: 20-30 seconds
-                </p>
-              </div>
             )}
+          </div>
+
+          {/* 右侧显示区域 */}
+          <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
+            <div className="h-80 border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center">
+              {generatedImage ? (
+                <div className="relative w-full h-full group">
+                  <Image
+                    src={generatedImage}
+                    alt="Generated image"
+                    fill
+                    className="object-contain rounded-lg"
+                  />
+                  {/* 添加下载按钮 */}
+                  {/* <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a
+                      href={generatedImage}
+                      download="generated-image.jpg"
+                      className="p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors"
+                    >
+                      <Download className="w-4 h-4 text-white" />
+                    </a>
+                  </div> */}
+                </div>
+              ) : isGenerating ? (
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <p className="text-white/60 text-lg mb-2">Creating your work...</p>
+                  <p className="text-white/40 text-sm mb-3">{taskMessage}</p>
+
+                  {/* 已等待时间显示 */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-center gap-2 text-white/70 mb-2">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-lg font-mono">
+                       Waiting for: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                    <p className="text-white/50 text-sm">
+                      Please be patient and wait for 20-30 seconds.
+                    </p>
+                  </div>
+
+                  <div className="mt-4 w-32 mx-auto">
+                    <div className="w-full bg-white/10 rounded-full h-1">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${taskProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <p className="text-white/60 text-lg">Your masterpiece will be displayed here</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

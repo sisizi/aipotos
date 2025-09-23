@@ -3,20 +3,29 @@
  */
 
 // 存储活跃的SSE连接
-const activeConnections = new Map<string, WritableStreamDefaultWriter>();
+interface SSEWriter {
+  write: (message: string) => void;
+  close: () => void;
+}
+
+const activeConnections = new Map<string, SSEWriter>();
 
 /**
  * 注册SSE连接
  */
-export function registerSSEConnection(taskId: string, writer: WritableStreamDefaultWriter) {
+export function registerSSEConnection(taskId: string, writer: SSEWriter) {
   activeConnections.set(taskId, writer);
+  console.log(`SSE connection registered for task ${taskId}`);
 }
 
 /**
  * 移除SSE连接
  */
 export function removeSSEConnection(taskId: string) {
-  activeConnections.delete(taskId);
+  const removed = activeConnections.delete(taskId);
+  if (removed) {
+    console.log(`SSE connection removed for task ${taskId}`);
+  }
 }
 
 /**
@@ -30,20 +39,25 @@ export function pushTaskUpdate(taskId: string, update: {
   if (connection) {
     try {
       const message = `data: ${JSON.stringify({
-        type: 'task_update',
+        type: update.type,
         taskId,
-        update,
+        task: update.data,
         timestamp: Date.now()
       })}\n\n`;
 
       connection.write(message);
+      console.log(`SSE update sent for task ${taskId}: ${update.type}`);
 
       // 如果任务完成或失败，清理连接
       if (update.type === 'completed' || update.type === 'failed') {
         setTimeout(() => {
-          connection.close();
+          try {
+            connection.close();
+          } catch (error) {
+            console.error('Error closing SSE connection:', error);
+          }
           activeConnections.delete(taskId);
-        }, 5000); // 5秒后关闭连接
+        }, 3000); // 3秒后关闭连接
       }
 
       return true;
@@ -53,6 +67,7 @@ export function pushTaskUpdate(taskId: string, update: {
       return false;
     }
   }
+  console.log(`No active SSE connection for task ${taskId}`);
   return false;
 }
 
@@ -67,6 +82,7 @@ export function getActiveConnectionsCount(): number {
  * 清理所有连接
  */
 export function cleanupAllConnections() {
+  console.log(`Cleaning up ${activeConnections.size} SSE connections`);
   activeConnections.forEach((connection, taskId) => {
     try {
       connection.close();

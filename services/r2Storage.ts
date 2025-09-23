@@ -117,22 +117,31 @@ export class R2StorageService {
       }
       // 下载图片
       console.log(`Downloading AI generated image from: ${imageUrl}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+
       const response = await fetch(imageUrl, {
         headers: {
           'User-Agent': 'PhotoGen-AI/1.0',
         },
+        signal: controller.signal,
       });
-      
+
+      clearTimeout(timeoutId);
+
+      console.log(`Download response status: ${response.status}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const imageBuffer = Buffer.from(await response.arrayBuffer());
       const contentType = response.headers.get('content-type') || 'image/png';
-      
+      console.log(`Downloaded image size: ${imageBuffer.length} bytes, content-type: ${contentType}`);
+
       // 生成存储路径
       const timestamp = Date.now();
       const key = `ai-generated/${userId}/${taskId}-${timestamp}.png`;
+      console.log(`Generated storage key: ${key}`);
       
       const bucketName = process.env.R2_BUCKET_AI_GENERATED || process.env.R2_BUCKET_NAME;
       if (!bucketName) {
@@ -152,8 +161,12 @@ export class R2StorageService {
         },
       });
       
-      await this.client.send(command);
-      console.log(`AI generated image stored to R2: ${key}`);
+      const result = await this.client.send(command);
+      console.log(`AI generated image stored to R2: ${key}`, {
+        etag: result.ETag,
+        key,
+        bucket: bucketName
+      });
 
       // 构建公开访问URL - AI生成图片使用专门的URL
       const publicUrl = process.env.R2_PUBLIC_URL_PROCESSED || process.env.R2_PUBLIC_URL;
@@ -166,7 +179,13 @@ export class R2StorageService {
       return `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${key}`;
       
     } catch (error) {
-      console.error('Error storing AI generated image:', error);
+      console.error('Error storing AI generated image:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        imageUrl,
+        taskId,
+        userId
+      });
       throw new StorageError(
         `Failed to store AI generated image: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'STORE_AI_IMAGE_FAILED',

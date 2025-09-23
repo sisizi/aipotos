@@ -1,10 +1,9 @@
 /**
- * 任务状态查询API路由
+ * 任务状态查询API路由 - 基于webhook更新
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseService } from '@/services/database';
-import { NanoBananaAPIService } from '@/services/nanoBananaAPI';
 import { APIResponse, TaskProgress } from '@/types';
 
 export async function GET(
@@ -25,7 +24,6 @@ export async function GET(
 
     // 初始化服务
     const dbService = new DatabaseService();
-    const nanoBananaService = new NanoBananaAPIService();
 
     // 从数据库获取任务信息
     const dbTask = await dbService.getTask(taskId, userId || undefined);
@@ -45,66 +43,17 @@ export async function GET(
       processingTime: dbTask.processing_time,
     };
 
-    // 如果任务正在处理且有AI任务ID，查询AI服务状态
-    if (dbTask.status === 'processing' && dbTask.nano_banana_task_id) {
-      try {
-        const aiTaskStatus = await nanoBananaService.getTaskStatus(dbTask.nano_banana_task_id);
+    // 为处理中的任务计算进度（基于时间估算）
+    if (dbTask.status === 'processing') {
+      const createdTime = new Date(dbTask.created_at).getTime();
+      const elapsed = (Date.now() - createdTime) / 1000; // 秒
+      const estimatedTotal = 90; // 预估总时间90秒
 
-        // 计算基础时间参数
-        const createdTime = new Date(dbTask.created_at).getTime();
-        const now = Date.now();
-        const elapsed = (now - createdTime) / 1000; // 秒
-        const estimatedTotal = 90; // 预估总时间90秒
-
-        // 根据AI任务状态更新本地任务状态
-        if (aiTaskStatus.state === 'success') {
-          // AI task completed but local status not updated yet
-          taskProgress.message = 'Task completed, saving results...';
-          taskProgress.progress = 90;
-          taskProgress.estimatedTimeLeft = Math.max(0, Math.round(10 - (elapsed - 80))); // last 10 seconds
-        } else if (aiTaskStatus.state === 'fail') {
-          // AI task failed but local status not updated
-          taskProgress.status = 'failed';
-          taskProgress.message = aiTaskStatus.failMsg || 'Task processing failed';
-
-          // 更新数据库状态
-          await dbService.updateTask(taskId, {
-            status: 'failed',
-            error_message: aiTaskStatus.failMsg || 'AI task failed',
-          });
-        } else if (aiTaskStatus.state === 'waiting') {
-          taskProgress.progress = 25;
-          taskProgress.message = 'Task queued, please wait...';
-          const remaining = Math.max(0, estimatedTotal - elapsed);
-          taskProgress.estimatedTimeLeft = Math.round(remaining);
-        } else if (aiTaskStatus.state === 'running') {
-          // Task is running
-          const progressRatio = Math.min(elapsed / estimatedTotal, 0.85); // max 85%
-          taskProgress.progress = Math.round(25 + progressRatio * 60); // 25%-85%
-          taskProgress.message = 'Generating image, please wait...';
-          const remaining = Math.max(0, estimatedTotal - elapsed);
-          taskProgress.estimatedTimeLeft = Math.round(remaining);
-        } else {
-          // Other states also show countdown
-          taskProgress.progress = 30;
-          taskProgress.message = 'Processing...';
-          const remaining = Math.max(0, estimatedTotal - elapsed);
-          taskProgress.estimatedTimeLeft = Math.round(remaining);
-        }
-
-      } catch (aiError) {
-        console.warn(`Failed to query AI task status for ${dbTask.nano_banana_task_id}:`, aiError);
-        // 继续使用数据库状态，不因AI查询失败而中断
-        // 即使AI查询失败，也提供倒计时
-        const createdTime = new Date(dbTask.created_at).getTime();
-        const now = Date.now();
-        const elapsed = (now - createdTime) / 1000;
-        const estimatedTotal = 90;
-        const remaining = Math.max(0, estimatedTotal - elapsed);
-        taskProgress.estimatedTimeLeft = Math.round(remaining);
-        taskProgress.progress = 40;
-        taskProgress.message = 'Processing...';
-      }
+      // 基于时间的进度估算
+      const progress = Math.min(85, Math.round((elapsed / estimatedTotal) * 85)); // 最多85%，等待webhook完成
+      taskProgress.progress = progress;
+      taskProgress.processingTime = Math.round(elapsed);
+      taskProgress.estimatedTimeLeft = Math.max(0, Math.round(estimatedTotal - elapsed));
     }
 
     // 如果任务已完成，添加结果信息
@@ -113,40 +62,15 @@ export async function GET(
       taskProgress.message = 'Task completed';
     } else if (dbTask.status === 'failed') {
       taskProgress.message = dbTask.error_message || 'Task failed';
-    } else if (dbTask.status === 'processing' && !dbTask.nano_banana_task_id) {
-      // Processing status without AI task ID, also provide countdown
-      const createdTime = new Date(dbTask.created_at).getTime();
-      const now = Date.now();
-      const elapsed = (now - createdTime) / 1000;
-      const estimatedTotal = 90; // estimated total time 90 seconds
-      const remaining = Math.max(0, estimatedTotal - elapsed);
-      taskProgress.estimatedTimeLeft = Math.round(remaining);
-      taskProgress.progress = Math.min(50, Math.round((elapsed / estimatedTotal) * 80));
-      taskProgress.message = 'Processing...';
-    } else if (dbTask.status === 'pending') {
-      // Pending status also provides countdown
-      const createdTime = new Date(dbTask.created_at).getTime();
-      const now = Date.now();
-      const elapsed = (now - createdTime) / 1000;
-      const estimatedTotal = 90; // estimated total time 90 seconds
-      const remaining = Math.max(0, estimatedTotal - elapsed);
-      taskProgress.estimatedTimeLeft = Math.round(remaining);
-      taskProgress.progress = 10;
-      taskProgress.message = 'Task created, waiting for processing...';
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        taskProgress,
-        task: dbTask, // 包含完整的任务信息
-      },
-      message: 'Task status retrieved successfully',
+      data: taskProgress,
     } as APIResponse, { status: 200 });
 
   } catch (error) {
-    console.error('Get task status error:', error);
-
+    console.error('Task status query error:', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error',
@@ -154,25 +78,22 @@ export async function GET(
   }
 }
 
-/**
- * Get user-friendly status message
- */
 function getStatusMessage(status: string): string {
   switch (status) {
     case 'pending':
-      return 'Task created, waiting for processing...';
+      return 'Task is queued and waiting to start';
     case 'processing':
-      return 'Generating image, please wait...';
+      return 'Task is being processed, please wait...';
     case 'completed':
-      return 'Task completed';
+      return 'Task completed successfully';
     case 'failed':
-      return 'Task failed';
+      return 'Task failed to complete';
     default:
       return 'Unknown status';
   }
 }
 
-// 支持OPTIONS请求
+// 添加OPTIONS方法支持CORS（如果需要）
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,

@@ -4,8 +4,6 @@
 
 import {
   GenerateImageRequest,
-  NanoBananaTaskResponse,
-  NanoBananaTaskStatus,
   NanoBananaCreateTaskRequest,
   AIServiceError
 } from '@/types';
@@ -36,22 +34,25 @@ export class NanoBananaAPIService {
    * 获取webhook回调URL
    */
   private getWebhookUrl(): string {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    return `${baseUrl}/api/webhook/nano-banana`;
+    // 优先使用专门的webhook URL环境变量
+    const webhookBaseUrl = process.env.WEBHOOK_BASE_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL;
+
+    if (!webhookBaseUrl) {
+      console.warn('No webhook base URL configured! Nano Banana won\'t be able to send webhooks.');
+      return 'http://localhost:3000/api/webhook/nano-banana';
+    }
+
+    // 确保 URL以https://或http://开头
+    let baseUrl = webhookBaseUrl;
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`;
+    }
+
+    const fullWebhookUrl = `${baseUrl}/api/webhook/nano-banana`;
+    console.log('Webhook URL configured:', fullWebhookUrl);
+    return fullWebhookUrl;
   }
 
-  /**
-   * 获取指定尺寸的白色画布URL
-   * @param width 宽度
-   * @param height 高度
-   * @returns 白色画布图片URL
-   */
-  private getBlankCanvasUrl(width: number, height: number): string {
-    // 使用一个简单的白色画布图片URL
-    // 这是一个1x1白色像素的base64编码，然后我们让服务处理
-    const size = Math.min(width, height, 1024); // 限制尺寸避免问题
-    return `https://dummyimage.com/${size}x${size}/ffffff/ffffff.png`;
-  }
 
   /**
    * 创建任务的通用请求方法
@@ -67,7 +68,8 @@ export class NanoBananaAPIService {
           ...data.input,
           prompt: data.input.prompt.substring(0, 100) + '...',
           image_urls: data.input.image_urls ? `[${data.input.image_urls.length} images]` : undefined
-        }
+        },
+        callBackUrl: data.callBackUrl
       });
 
       // Add timeout to prevent hanging requests
@@ -182,87 +184,18 @@ export class NanoBananaAPIService {
     }
   }
 
-  /**
-   * 查询任务状态的通用方法
-   */
-  private async getTaskInfo(taskId: string): Promise<NanoBananaTaskStatus> {
-    const url = `${this.baseURL}/recordInfo?taskId=${taskId}`;
-
-    try {
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for status checks
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'User-Agent': 'PhotoGen-AI/1.0',
-          'Accept': 'application/json',
-        },
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new AIServiceError(
-          `Failed to get task status: ${response.status} ${response.statusText}`,
-          'TASK_STATUS_ERROR',
-          { taskId, status: response.status }
-        );
-      }
-
-      const result = await response.json();
-
-      if (result.code !== 200) {
-        throw new AIServiceError(
-          `Task query failed: ${result.msg}`,
-          `API_ERROR_${result.code}`,
-          result
-        );
-      }
-
-      return result.data;
-
-    } catch (error) {
-      if (error instanceof AIServiceError) {
-        throw error;
-      }
-      console.error('Error getting task status:', error);
-
-      // Handle timeout/abort errors specifically
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new AIServiceError(
-          'Task status check timeout: AI service is taking too long to respond',
-          'STATUS_CHECK_TIMEOUT',
-          { taskId }
-        );
-      }
-
-      throw new AIServiceError(
-        `Task status check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'TASK_STATUS_FAILED',
-        { taskId }
-      );
-    }
-  }
 
   /**
-   * 创建图片生成任务
+   * 创建图片生成任务（使用Nano Banana模型进行文生图）
    * @param params 生成参数
    * @returns 任务ID
    */
   async createGenerateTask(params: Omit<GenerateImageRequest, 'user_id'>): Promise<string> {
-    // Nano Banana API是图片编辑API，需要一个基础图片
-    // 对于"生成"任务，我们使用白色画布作为基础
-    const baseImageUrl = this.getBlankCanvasUrl(params.width || 512, params.height || 512);
-
+    // 使用基础的 nano-banana 模型进行文本生成图片
     const requestData: NanoBananaCreateTaskRequest = {
-      model: 'google/nano-banana-edit',
+      model: 'google/nano-banana',  // 使用基础模型进行文本到图片生成
       input: {
         prompt: params.prompt,
-        image_urls: [baseImageUrl],
         output_format: 'png',
         image_size: this.mapImageSize(params.width, params.height),
       },
@@ -270,11 +203,10 @@ export class NanoBananaAPIService {
       callBackUrl: this.getWebhookUrl()
     };
 
-    console.log('Creating image generation task with params:', {
+    console.log('Creating image generation task (text-to-image using nano-banana base model):', {
       model: requestData.model,
       prompt: params.prompt.substring(0, 100) + '...',
       image_size: requestData.input.image_size,
-      baseImageUrl: baseImageUrl,
       targetSize: `${params.width || 512}x${params.height || 512}`
     });
 
@@ -294,7 +226,7 @@ export class NanoBananaAPIService {
   }
 
   /**
-   * 创建图片编辑任务
+   * 创建图片编辑任务（使用专门的编辑模型）
    * @param params 编辑参数
    * @returns 任务ID
    */
@@ -305,12 +237,13 @@ export class NanoBananaAPIService {
     strength?: number;
   }): Promise<string> {
     const requestData: NanoBananaCreateTaskRequest = {
-      model: 'google/nano-banana-edit',
+      model: 'google/nano-banana-edit',  // 专门的图片编辑模型
       input: {
         prompt: params.prompt,
         image_urls: [params.image_url],
         output_format: 'png',
         image_size: 'auto', // 保持原始尺寸
+        strength: params.strength || 0.8,
       },
       // 配置webhook回调URL
       callBackUrl: this.getWebhookUrl()
@@ -319,7 +252,8 @@ export class NanoBananaAPIService {
     console.log('Creating image editing task with params:', {
       model: requestData.model,
       prompt: params.prompt.substring(0, 100) + '...',
-      hasInputImage: !!params.image_url
+      hasInputImage: !!params.image_url,
+      strength: params.strength || 0.8
     });
 
     try {
@@ -337,162 +271,8 @@ export class NanoBananaAPIService {
     }
   }
 
-  /**
-   * 查询任务状态
-   * @param taskId Nano Banana任务ID
-   * @returns 任务状态信息
-   */
-  async getTaskStatus(taskId: string): Promise<NanoBananaTaskStatus> {
-    return this.getTaskInfo(taskId);
-  }
 
-  /**
-   * 等待任务完成（轮询模式）
-   * @param taskId 任务ID
-   * @param options 轮询选项
-   * @returns 任务结果
-   */
-  async waitForTaskCompletion(taskId: string, options: {
-    maxAttempts?: number;
-    intervalMs?: number;
-    timeoutMs?: number;
-  } = {}): Promise<NanoBananaTaskResponse> {
-    const {
-      maxAttempts = 120,      // 最多轮询120次
-      intervalMs = 2000,      // 每2秒轮询一次
-      timeoutMs = 240000      // 最多等待4分钟
-    } = options;
 
-    const startTime = Date.now();
-    let attempts = 0;
-
-    while (attempts < maxAttempts) {
-      // 检查是否超时
-      if (Date.now() - startTime > timeoutMs) {
-        throw new AIServiceError(
-          `Task timeout after ${timeoutMs}ms`,
-          'TASK_TIMEOUT',
-          { taskId, attempts, timeoutMs }
-        );
-      }
-
-      try {
-        const taskStatus = await this.getTaskStatus(taskId);
-        attempts++;
-
-        console.log(`Task ${taskId} status check ${attempts}/${maxAttempts}: ${taskStatus.state}`);
-
-        if (taskStatus.state === 'success') {
-          // 任务成功完成
-          if (!taskStatus.resultJson) {
-            throw new AIServiceError(
-              'Task completed but no result found',
-              'MISSING_RESULT',
-              taskStatus
-            );
-          }
-
-          let resultData;
-          try {
-            resultData = JSON.parse(taskStatus.resultJson);
-          } catch (parseError) {
-            throw new AIServiceError(
-              'Failed to parse task result',
-              'INVALID_RESULT_JSON',
-              { taskStatus, parseError }
-            );
-          }
-
-          return {
-            success: true,
-            taskId,
-            imageUrls: resultData.resultUrls || [],
-            message: '任务成功完成',
-            processingTime: taskStatus.costTime,
-            completedAt: new Date(taskStatus.completeTime || Date.now()).toISOString()
-          };
-
-        } else if (taskStatus.state === 'fail') {
-          // 任务失败
-          throw new AIServiceError(
-            taskStatus.failMsg || 'Task failed',
-            taskStatus.failCode || 'TASK_FAILED',
-            taskStatus
-          );
-
-        } else if (taskStatus.state === 'waiting') {
-          // 任务还在等待中，继续轮询
-          if (attempts < maxAttempts) {
-            console.log(`Task ${taskId} still waiting, checking again in ${intervalMs}ms...`);
-            await new Promise(resolve => setTimeout(resolve, intervalMs));
-            continue;
-          }
-        } else {
-          // 未知状态
-          console.warn(`Unknown task state: ${taskStatus.state}`);
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, intervalMs));
-            continue;
-          }
-        }
-
-      } catch (error) {
-        if (error instanceof AIServiceError && error.code !== 'TASK_STATUS_FAILED') {
-          throw error;
-        }
-
-        console.warn(`Failed to check task status (attempt ${attempts}):`, error);
-        if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, intervalMs));
-          continue;
-        }
-        throw error;
-      }
-    }
-
-    throw new AIServiceError(
-      `Task polling exceeded maximum attempts (${maxAttempts})`,
-      'MAX_POLLING_ATTEMPTS',
-      { taskId, maxAttempts, timeoutMs }
-    );
-  }
-
-  /**
-   * 生成图片（完整流程）
-   * @param params 生成参数
-   * @param options 轮询选项
-   * @returns 生成结果
-   */
-  async generateImage(params: Omit<GenerateImageRequest, 'user_id'>, options?: {
-    maxAttempts?: number;
-    intervalMs?: number;
-    timeoutMs?: number;
-  }): Promise<NanoBananaTaskResponse> {
-    const taskId = await this.createGenerateTask(params);
-    console.log(`Created generation task: ${taskId}, waiting for completion...`);
-    return this.waitForTaskCompletion(taskId, options);
-  }
-
-  /**
-   * 编辑图片（完整流程）
-   * @param params 编辑参数
-   * @param options 轮询选项
-   * @returns 编辑结果
-   */
-  async editImage(params: {
-    image_url: string;
-    prompt: string;
-    mask_url?: string;
-    strength?: number;
-  }, options?: {
-    maxAttempts?: number;
-    intervalMs?: number;
-    timeoutMs?: number;
-  }): Promise<NanoBananaTaskResponse> {
-    const taskId = await this.createEditTask(params);
-    console.log(`Created editing task: ${taskId}, waiting for completion...`);
-    return this.waitForTaskCompletion(taskId, options);
-  }
 
   /**
    * 简单的连接测试
@@ -576,8 +356,11 @@ export class NanoBananaAPIService {
    * @returns 模型列表
    */
   async getAvailableModels(): Promise<string[]> {
-    // 根据文档，目前只支持 google/nano-banana-edit 模型
-    return ['google/nano-banana-edit'];
+    // 支持两种模型：基础生成模型和编辑专用模型
+    return [
+      'google/nano-banana',       // 文本生成图片（Text-to-Image）
+      'google/nano-banana-edit'   // 图片编辑（Image-to-Image）
+    ];
   }
 
   /**

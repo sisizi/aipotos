@@ -44,39 +44,20 @@ export interface EditImageRequest {
 
 // 创建任务请求类型
 export interface NanoBananaCreateTaskRequest {
-  model: 'google/nano-banana-edit';
+  model: 'google/nano-banana' | 'google/nano-banana-edit';  // 支持基础模型和编辑模型
   input: {
     prompt: string;
-    image_urls: string[];  // 最多5张图片
-    output_format?: 'png' | 'jpeg';
+    // 编辑时提供图片，生成时不提供图片
+    image_urls?: string[];  // 最多5张图片（编辑时提供，生成时不提供）
     image_size?: 'auto' | '1:1' | '3:4' | '9:16' | '4:3' | '16:9';
+    strength?: number;      // 编辑强度（仅编辑时使用）
+    output_format?: 'png' | 'jpeg';
   };
   callBackUrl?: string;
 }
 
 // 任务状态类型
-export interface NanoBananaTaskStatus {
-  taskId: string;
-  model: string;
-  state: 'waiting' | 'success' | 'fail';
-  param: string;  // JSON字符串，包含原始请求参数
-  resultJson?: string;  // JSON字符串，包含结果URLs
-  failCode?: string;
-  failMsg?: string;
-  costTime?: number;  // 处理时间（毫秒）
-  completeTime?: number;  // 完成时间戳
-  createTime: number;  // 创建时间戳
-}
 
-// 任务响应类型（统一的返回格式）
-export interface NanoBananaTaskResponse {
-  success: boolean;
-  taskId: string;
-  imageUrls: string[];  // 支持多张图片
-  message: string;
-  processingTime?: number;
-  completedAt?: string;
-}
 
 // 旧的响应类型（保持向后兼容）
 export interface NanoBananaResponse {
@@ -134,12 +115,6 @@ export interface TaskStats {
   failed: number;
 }
 
-// 异步任务轮询选项
-export interface TaskPollingOptions {
-  maxAttempts?: number;    // 最大轮询次数，默认120
-  intervalMs?: number;     // 轮询间隔（毫秒），默认2000
-  timeoutMs?: number;      // 总超时时间（毫秒），默认240000
-}
 
 // API任务创建响应
 export interface TaskCreationResponse {
@@ -181,8 +156,6 @@ export interface UseAIImageReturn {
   editImage: (params: ImageEditParams) => Promise<APIResponse>;
   createGenerateTask: (params: ImageGenerationParams) => Promise<string>;  // 返回taskId
   createEditTask: (params: ImageEditParams) => Promise<string>;  // 返回taskId
-  getTaskStatus: (taskId: string) => Promise<NanoBananaTaskStatus>;
-  waitForTaskCompletion: (taskId: string) => Promise<NanoBananaTaskResponse>;
   getTask: (taskId: string) => Promise<TaskRecord | null>;
   getUserTasks: (userId: string, limit?: number, offset?: number) => Promise<TaskRecord[]>;
   isLoading: boolean;
