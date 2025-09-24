@@ -55,30 +55,6 @@
 - 自动重连机制
 - 优雅降级处理
 
-## 🔧 **调试工具**
-
-### 查看配置
-```
-GET /api/debug/config
-```
-
-### 查看Webhook日志
-```
-GET /api/webhook-logs
-DELETE /api/webhook-logs  # 清除日志
-```
-
-### 查看超时状态
-```
-GET /api/debug/timeouts
-DELETE /api/debug/timeouts  # 清除所有超时
-```
-
-### 查看任务状态
-```
-GET /api/debug/tasks?limit=10
-POST /api/debug/tasks
-```
 
 ## ⚠️ **重要提醒**
 
@@ -91,9 +67,9 @@ NEXTAUTH_URL=https://your-domain.com
 ```
 
 ### 监控建议
-- 定期检查 `/api/webhook-logs` 确认webhook正常接收
-- 监控 `/api/debug/timeouts` 查看超时任务数量
-- 使用 `/api/debug/config` 验证配置正确性
+- 检查应用日志确认webhook正常接收
+- 监控任务超时情况
+- 验证环境配置正确性
 
 ## 🚀 **性能优势**
 

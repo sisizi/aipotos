@@ -21,7 +21,6 @@ const EditImagePage = () => {
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null); // 当前任务ID
   const [taskProgress, setTaskProgress] = useState<number>(0); // 任务进度
   const [taskMessage, setTaskMessage] = useState<string>(''); // 任务状态消息
-  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<number>(0); // 预估剩余时间
   const [elapsedTime, setElapsedTime] = useState<number>(0); // 已经过时间
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null); // 任务开始时间
   const [uploadingSlots, setUploadingSlots] = useState<Set<number>>(new Set()); // 正在上传的slot索引
@@ -65,6 +64,7 @@ const EditImagePage = () => {
       }
     };
   }, [isGenerating, taskStartTime]);
+
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -146,92 +146,171 @@ const EditImagePage = () => {
     }
   };
 
-  // 使用SSE监听任务状态更新
-  const startTaskSSE = (taskId: string) => {
+
+
+  // 修复后的轮询检查函数
+  const startSimplePolling = (taskId: string) => {
     setCurrentTaskId(taskId);
     setTaskProgress(10);
     setTaskMessage('任务已创建，正在处理中...');
 
-    // 创建EventSource连接
-    const eventSource = new EventSource(`/api/tasks/${taskId}/webhook?userId=${userId}`);
+    let checkCount = 0;
+    const maxChecks = 120; // 10分钟
+    let isPollingActive = true;
 
-    eventSource.onmessage = (event) => {
+    const checkTask = async () => {
+      if (!isPollingActive) return;
+
+      checkCount++;
+
       try {
-        const data = JSON.parse(event.data);
+        // 首先尝试从缓存获取快速结果（静默处理404）
+        try {
+          const cacheResponse = await fetch(`/api/tasks/${taskId}/quick`);
 
-        if (data.type === 'status' && data.taskProgress) {
-          const progress = data.taskProgress;
-          setTaskProgress(progress.progress || 0);
-          setTaskMessage(progress.message || '');
-          setEstimatedTimeLeft(progress.estimatedTimeLeft || 0);
+          if (cacheResponse.ok) {
+            const cacheResult = await cacheResponse.json();
+            if (cacheResult.success && cacheResult.data) {
+              const task = cacheResult.data;
+
+              if (task.status === 'completed' && task.output_image_url) {
+                console.log('✅ 缓存中找到完成的任务，立即显示图片:', task.output_image_url);
+
+                // 停止轮询
+                isPollingActive = false;
+
+                // 更新UI状态
+                setGeneratedImage(task.output_image_url);
+                setIsGenerating(false);
+                setCurrentTaskId(null);
+                setTaskProgress(100);
+                setTaskMessage('任务完成！');
+                setTaskStartTime(null);
+                return;
+              } else if (task.status === 'failed') {
+                isPollingActive = false;
+                setIsGenerating(false);
+                setCurrentTaskId(null);
+                setTaskStartTime(null);
+                setTaskProgress(0);
+                setTaskMessage('');
+                alert(`任务失败: ${task.error_message || '未知错误'}`);
+                return;
+              }
+            }
+          }
+        } catch (cacheError) {
+          // 静默处理缓存请求错误（404等），这是正常情况
         }
 
-        if (data.type === 'error') {
-          console.error('SSE错误:', data.error);
-          eventSource.close();
+        // 如果缓存没有结果，检查数据库
+        const taskResponse = await fetch(`/api/tasks/${taskId}?userId=${userId}`);
+
+        if (taskResponse.ok) {
+          const taskResult = await taskResponse.json();
+
+          if (taskResult.success && taskResult.data) {
+            const task = taskResult.data;
+
+            if (task.status === 'completed' && task.output_image_url) {
+              // 停止轮询
+              isPollingActive = false;
+
+              // 更新UI状态
+              setGeneratedImage(task.output_image_url);
+              setIsGenerating(false);
+              setCurrentTaskId(null);
+              setTaskProgress(100);
+              setTaskMessage('任务完成！');
+              setTaskStartTime(null);
+              return;
+
+            } else if (task.status === 'failed') {
+              isPollingActive = false;
+              setIsGenerating(false);
+              setCurrentTaskId(null);
+              setTaskStartTime(null);
+              setTaskProgress(0);
+              setTaskMessage('');
+              alert(`任务失败: ${task.error_message || '未知错误'}`);
+              return;
+            }
+            // 如果状态是 'processing' 或其他，继续轮询
+          }
+        }
+
+        // 继续下一次检查
+        if (checkCount < maxChecks && isPollingActive) {
+          setTimeout(checkTask, 3000); // 3秒间隔
+        } else if (checkCount >= maxChecks) {
+          // 超时处理
+          isPollingActive = false;
           setIsGenerating(false);
           setCurrentTaskId(null);
           setTaskStartTime(null);
-          alert(`任务失败: ${data.error}`);
-        }
-
-        if (data.type === 'timeout') {
-          console.log('SSE超时，任务可能仍在处理中');
-          eventSource.close();
-          // SSE超时后，继续等待webhook通知
-          setTaskMessage('网络连接中断，但任务仍在处理中，请稍后...');
-        }
-
-        // 检查任务是否完成
-        if (data.task && data.task.status === 'completed') {
-          eventSource.close();
-          setGeneratedImage(data.task.output_image_url);
-          setIsGenerating(false);
-          setCurrentTaskId(null);
-          setTaskProgress(100);
-          setTaskMessage('任务完成！');
-          setTaskStartTime(null);
-          console.log('图像生成完成:', data.task.output_image_url);
-        } else if (data.task && data.task.status === 'failed') {
-          eventSource.close();
-          setIsGenerating(false);
-          setCurrentTaskId(null);
-          setTaskStartTime(null);
-          alert(`任务失败: ${data.task.error_message || '未知错误'}`);
+          setTaskProgress(0);
+          setTaskMessage('');
+          alert('任务超时（10分钟），请稍后重试');
         }
 
       } catch (error) {
-        console.error('解析SSE数据失败:', error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.error('SSE连接错误:', error);
-      eventSource.close();
-      // 发生错误时，继续等待webhook通知
-      setTaskMessage('网络连接中断，但任务仍在处理中，请稍后...');
-    };
-
-    // 11分钟后自动关闭SSE连接（略长于任务超时）
-    setTimeout(() => {
-      if (eventSource.readyState !== EventSource.CLOSED) {
-        eventSource.close();
-        if (currentTaskId === taskId) {
-          // 检查任务状态，如果超时则显示对应消息
-          checkFinalTaskStatus(taskId);
+        // 网络错误也继续尝试
+        if (checkCount < maxChecks && isPollingActive) {
+          setTimeout(checkTask, 3000);
         }
       }
-    }, 11 * 60 * 1000); // 11分钟
+    };
 
-    return eventSource;
+    // 10秒后开始第一次检查
+    setTimeout(checkTask, 10000);
   };
 
-  // 查询任务最终状态（webhook模式下仅用于超时检查）
+
+  // 简单轮询已替代复杂的SSE和备用检查机制
+
+  // 查询任务最终状态
   const checkFinalTaskStatus = async (taskId: string) => {
     try {
+      console.log(`🔍 检查任务状态: ${taskId}`);
+
+      // 1. 优先检查快速缓存
+      const quickResponse = await fetch(`/api/tasks/${taskId}/quick`);
+      console.log(`📦 缓存检查响应状态: ${quickResponse.status}`);
+
+      if (quickResponse.ok) {
+        const quickResult = await quickResponse.json();
+        console.log('📦 缓存检查结果:', quickResult);
+
+        if (quickResult.success && quickResult.data) {
+          const task = quickResult.data;
+          if (task.status === 'completed' && task.output_image_url) {
+            console.log('从缓存获取到图像结果:', task.output_image_url);
+            setGeneratedImage(task.output_image_url);
+            setIsGenerating(false);
+            setCurrentTaskId(null);
+            setTaskProgress(100);
+            setTaskMessage(task.is_temporary ? '任务完成！图像正在后台保存...' : '任务完成！');
+            setTaskStartTime(null);
+            return; // 找到结果，直接返回
+          } else if (task.status === 'failed') {
+            setIsGenerating(false);
+            setCurrentTaskId(null);
+            setTaskStartTime(null);
+            alert(`任务失败: ${task.error_message || '未知错误'}`);
+            return;
+          }
+        }
+      }
+
+      // 2. 缓存中没有结果，检查数据库
+      console.log('🗄️ 缓存中没有找到结果，检查数据库...');
       const taskResponse = await fetch(`/api/tasks/${taskId}?userId=${userId}`);
+      console.log(`🗄️ 数据库检查响应状态: ${taskResponse.status}`);
+
       if (taskResponse.ok) {
         const taskResult = await taskResponse.json();
+        console.log('🗄️ 数据库检查结果:', taskResult);
+
         if (taskResult.success && taskResult.data) {
           const task = taskResult.data;
           if (task.status === 'completed' && task.output_image_url) {
@@ -241,7 +320,7 @@ const EditImagePage = () => {
             setTaskProgress(100);
             setTaskMessage('任务完成！');
             setTaskStartTime(null);
-            console.log('图像生成完成:', task.output_image_url);
+            console.log('从数据库获取到图像结果:', task.output_image_url);
           } else if (task.status === 'failed') {
             setIsGenerating(false);
             setCurrentTaskId(null);
@@ -286,6 +365,8 @@ const EditImagePage = () => {
     setElapsedTime(0);
     setTaskStartTime(startTime);
 
+    // 保留输入文本和上传的图片
+
     try {
       const isEditMode = selectedTab === 'edit' && uploadedImages.length > 0;
 
@@ -321,8 +402,8 @@ const EditImagePage = () => {
         const result = await response.json();
         if (result.success && result.data && result.data.taskId) {
           console.log('任务创建成功:', result.data.taskId);
-          // 开始SSE监听任务状态
-          startTaskSSE(result.data.taskId);
+          // 启动简化轮询检查数据库
+          startSimplePolling(result.data.taskId);
         } else {
           console.error('任务创建失败:', result.error || '未知错误');
           alert(`任务创建失败: ${result.error || '未知错误'}`);
@@ -348,6 +429,41 @@ const EditImagePage = () => {
     navigator.clipboard.writeText(prompt);
   };
 
+  // 下载生成的图片
+  const downloadGeneratedImage = async () => {
+    if (!generatedImage) {
+      alert('没有可下载的图片');
+      return;
+    }
+
+    try {
+      // 直接fetch然后立即下载
+      const response = await fetch(generatedImage, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ai-generated-image-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('下载失败:', error);
+      alert('下载失败，请稍后重试或联系管理员配置CORS');
+    }
+  };
+
+
   return (
     <div className="min-h-screen text-white" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
       {/* 顶部导航 */}
@@ -368,8 +484,12 @@ const EditImagePage = () => {
               <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center">
                 <Share2 className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
               </button>
-              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center">
-                <Download className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
+              <button
+                onClick={downloadGeneratedImage}
+                className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center"
+                title={generatedImage ? "下载图片" : "暂无可下载图片"}
+              >
+                <Download className={`w-4 h-4 transition-colors ${generatedImage ? 'group-hover:text-blue-400' : 'text-gray-500'}`} />
               </button>
             </div>
           </div>
@@ -383,7 +503,10 @@ const EditImagePage = () => {
             {/* 标签页 */}
             <div className="flex gap-2 justify-center">
               <button
-                onClick={() => setSelectedTab('edit')}
+                onClick={() => {
+                  setSelectedTab('edit');
+                  setGeneratedImage(null); // 清除生成的图片
+                }}
                 className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
                   selectedTab === 'edit'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
@@ -394,7 +517,10 @@ const EditImagePage = () => {
                 Edit Image
               </button>
               <button
-                onClick={() => setSelectedTab('create')}
+                onClick={() => {
+                  setSelectedTab('create');
+                  setGeneratedImage(null); // 清除生成的图片
+                }}
                 className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
                   selectedTab === 'create'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
@@ -483,7 +609,7 @@ const EditImagePage = () => {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="E.g. Change the background to a sunset beach scene."
-                  className="w-full h-32 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-colors resize-none"
+                  className="w-full h-48 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-colors resize-none"
                 />
                 <div className="absolute bottom-2 right-2 text-xs text-white/40">
                   {prompt.length}/5000 characters
@@ -501,36 +627,11 @@ const EditImagePage = () => {
               {isGenerating ? 'Processing...' : 'Generate Now'}
             </button>
 
-            {/* 任务进度显示 */}
-            {isGenerating && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm text-white/70">
-                  <span>{taskMessage}</span>
-                  {estimatedTimeLeft > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {estimatedTimeLeft}s
-                    </span>
-                  )}
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${taskProgress}%` }}
-                  ></div>
-                </div>
-                {currentTaskId && (
-                  <div className="text-xs text-white/50">
-                    Task ID: {currentTaskId}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* 右侧显示区域 */}
           <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
-            <div className="h-80 border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center">
+            <div className="h-[80vh] border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center">
               {generatedImage ? (
                 <div className="relative w-full h-full group">
                   <Image
@@ -539,57 +640,55 @@ const EditImagePage = () => {
                     fill
                     className="object-contain rounded-lg"
                   />
-                  {/* 添加下载按钮 */}
-                  {/* <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <a
-                      href={generatedImage}
-                      download="generated-image.jpg"
-                      className="p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors"
-                    >
-                      <Download className="w-4 h-4 text-white" />
-                    </a>
-                  </div> */}
                 </div>
               ) : isGenerating ? (
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
-                      <Sparkles className="w-6 h-6 text-white" />
+                  {/* Enhanced Loading Animation */}
+                  <div className="relative w-24 h-24 mx-auto mb-6">
+                    <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
+                    <div className="absolute inset-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
+                      <Sparkles className="w-8 h-8 text-white" />
                     </div>
                   </div>
-                  <p className="text-white/60 text-lg mb-2">Creating your work...</p>
-                  <p className="text-white/40 text-sm mb-3">{taskMessage}</p>
 
-                  {/* 已等待时间显示 */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-center gap-2 text-white/70 mb-2">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-lg font-mono">
-                       Waiting for: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                  <div className="space-y-4">
+                    <h3 className="text-white text-xl font-semibold">Creating Your Artwork</h3>
+
+                    {/* Timer Display */}
+                    <div className="flex items-center justify-center gap-3 text-white/80 bg-white/5 rounded-lg py-3 px-4">
+                      <Clock className="w-5 h-5 text-blue-400" />
+                      <span className="text-2xl font-mono tracking-wider">
+                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                       </span>
                     </div>
-                    <p className="text-white/50 text-sm">
-                      Please be patient and wait for 20-30 seconds.
-                    </p>
-                  </div>
 
-                  <div className="mt-4 w-32 mx-auto">
-                    <div className="w-full bg-white/10 rounded-full h-1">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${taskProgress}%` }}
-                      ></div>
+                    {/* Generation Tips */}
+                    <div className="bg-white/5 rounded-lg p-4 text-center">
+                      <p className="text-white/70 text-sm mb-2">🎨 AI is painting your masterpiece...</p>
+                      <p className="text-white/50 text-xs">
+                        Typical generation time: <span className="text-blue-400 font-medium">20-30 seconds</span>
+                      </p>
+                      <p className="text-white/40 text-xs mt-1">
+                        Please stay on this page while we work our magic
+                      </p>
+                    </div>
+
+                    {/* Animated Progress Indicator */}
+                    <div className="flex justify-center gap-1 mt-6">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-white" />
-                    </div>
+                <div className="text-center text-white/40">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-8 h-8" />
                   </div>
-                  <p className="text-white/60 text-lg">Your masterpiece will be displayed here</p>
+                  <p className="text-lg mb-2">Ready to Create</p>
+                  <p className="text-sm">Enter your prompt and click Generate to start</p>
                 </div>
               )}
             </div>

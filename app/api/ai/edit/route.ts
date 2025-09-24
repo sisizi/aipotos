@@ -98,7 +98,6 @@ export async function POST(request: NextRequest) {
       message: 'Image editing task created successfully',
     } as APIResponse, { status: 200 });
 
-
   } catch (error) {
     console.error('Edit image error:', error);
 

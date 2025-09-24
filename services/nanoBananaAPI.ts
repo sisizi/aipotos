@@ -34,22 +34,39 @@ export class NanoBananaAPIService {
    * 获取webhook回调URL
    */
   private getWebhookUrl(): string {
-    // 优先使用专门的webhook URL环境变量
+    // 按优先级获取webhook基础URL
     const webhookBaseUrl = process.env.WEBHOOK_BASE_URL || process.env.NEXTAUTH_URL || process.env.VERCEL_URL;
 
+    console.log('Webhook URL detection:', {
+      WEBHOOK_BASE_URL: process.env.WEBHOOK_BASE_URL || 'not set',
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'not set',
+      VERCEL_URL: process.env.VERCEL_URL || 'not set',
+      selected: webhookBaseUrl || 'none'
+    });
+
     if (!webhookBaseUrl) {
-      console.warn('No webhook base URL configured! Nano Banana won\'t be able to send webhooks.');
-      return 'http://localhost:3000/api/webhook/nano-banana';
+      const fallbackUrl = 'http://localhost:3000/api/webhook/nano-banana';
+      console.warn('⚠️  No webhook base URL configured! Using fallback:', fallbackUrl);
+      console.warn('⚠️  kei.ai won\'t be able to send webhooks to localhost unless using tunnel (ngrok, etc.)');
+      return fallbackUrl;
     }
 
     // 确保 URL以https://或http://开头
     let baseUrl = webhookBaseUrl;
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
       baseUrl = `https://${baseUrl}`;
+      console.log('Added https:// prefix to URL');
     }
 
     const fullWebhookUrl = `${baseUrl}/api/webhook/nano-banana`;
-    console.log('Webhook URL configured:', fullWebhookUrl);
+
+    // 检测是否使用localhost（需要隧道）
+    if (baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
+      console.warn('🔧 Using localhost webhook URL. Make sure you have a tunnel (ngrok, localtunnel, etc.) running for kei.ai to reach your webhook!');
+    } else {
+      console.log('✅ Webhook URL configured for external access:', fullWebhookUrl);
+    }
+
     return fullWebhookUrl;
   }
 

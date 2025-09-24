@@ -116,32 +116,42 @@ export class R2StorageService {
         throw new Error('userId is required');
       }
       // 下载图片
-      console.log(`Downloading AI generated image from: ${imageUrl}`);
+      console.log(`📥 Downloading AI generated image from: ${imageUrl}`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
 
       const response = await fetch(imageUrl, {
         headers: {
           'User-Agent': 'PhotoGen-AI/1.0',
+          'Accept': 'image/png,image/jpeg,image/webp,image/*,*/*',
         },
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
-      console.log(`Download response status: ${response.status}`);
+      console.log(`📡 Download response status: ${response.status}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const imageBuffer = Buffer.from(await response.arrayBuffer());
       const contentType = response.headers.get('content-type') || 'image/png';
-      console.log(`Downloaded image size: ${imageBuffer.length} bytes, content-type: ${contentType}`);
+      console.log(`✅ Downloaded image size: ${imageBuffer.length} bytes, content-type: ${contentType}`);
+
+      // 验证图片大小
+      if (imageBuffer.length === 0) {
+        throw new Error('Downloaded image is empty');
+      }
+      if (imageBuffer.length > 50 * 1024 * 1024) { // 50MB限制
+        throw new Error(`Image too large: ${Math.round(imageBuffer.length / 1024 / 1024)}MB`);
+      }
 
       // 生成存储路径
       const timestamp = Date.now();
-      const key = `ai-generated/${userId}/${taskId}-${timestamp}.png`;
-      console.log(`Generated storage key: ${key}`);
+      const fileExt = contentType.includes('jpeg') ? 'jpg' : 'png';
+      const key = `ai-generated/${userId}/${taskId}-${timestamp}.${fileExt}`;
+      console.log(`🔑 Generated storage key: ${key}`);
       
       const bucketName = process.env.R2_BUCKET_AI_GENERATED || process.env.R2_BUCKET_NAME;
       if (!bucketName) {
@@ -162,7 +172,7 @@ export class R2StorageService {
       });
       
       const result = await this.client.send(command);
-      console.log(`AI generated image stored to R2: ${key}`, {
+      console.log(`🎉 AI generated image stored to R2: ${key}`, {
         etag: result.ETag,
         key,
         bucket: bucketName
@@ -171,12 +181,16 @@ export class R2StorageService {
       // 构建公开访问URL - AI生成图片使用专门的URL
       const publicUrl = process.env.R2_PUBLIC_URL_PROCESSED || process.env.R2_PUBLIC_URL;
       if (publicUrl) {
-        return `${publicUrl}/${key}`;
+        const finalUrl = `${publicUrl}/${key}`;
+        console.log(`🌐 Generated public URL: ${finalUrl}`);
+        return finalUrl;
       }
-      
+
       // 如果没有配置公开URL，使用R2端点
       const accountId = process.env.R2_ACCOUNT_ID;
-      return `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${key}`;
+      const fallbackUrl = `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${key}`;
+      console.log(`🌐 Generated fallback URL: ${fallbackUrl}`);
+      return fallbackUrl;
       
     } catch (error) {
       console.error('Error storing AI generated image:', {
