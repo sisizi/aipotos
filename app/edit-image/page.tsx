@@ -256,13 +256,13 @@ const EditImagePage = () => {
       } catch (error) {
         // 网络错误也继续尝试
         if (checkCount < maxChecks && isPollingActive) {
-          setTimeout(checkTask, 3000);
+          setTimeout(checkTask, 2000);
         }
       }
     };
 
-    // 10秒后开始第一次检查
-    setTimeout(checkTask, 10000);
+    // 22秒后开始第一次检查
+    setTimeout(checkTask, 25000);
   };
 
 
@@ -437,29 +437,25 @@ const EditImagePage = () => {
     }
 
     try {
-      // 直接fetch然后立即下载
-      const response = await fetch(generatedImage, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
+      const filename = `ai-generated-image-${Date.now()}.png`;
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      // 使用下载代理API避免CORS问题
+      const downloadUrl = `/api/download-image?imageUrl=${encodeURIComponent(generatedImage)}&filename=${encodeURIComponent(filename)}`;
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // 创建隐藏的下载链接
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `ai-generated-image-${Date.now()}.png`;
+      link.href = downloadUrl;
+      link.download = filename;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+
+      console.log('下载开始:', filename);
 
     } catch (error) {
       console.error('下载失败:', error);
-      alert('下载失败，请稍后重试或联系管理员配置CORS');
+      alert('下载失败，请稍后重试');
     }
   };
 
@@ -653,7 +649,7 @@ const EditImagePage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-white text-xl font-semibold">Creating Your Artwork</h3>
+                    <h3 className="text-white text-xl font-semibold">Working...</h3>
 
                     {/* Timer Display */}
                     <div className="flex items-center justify-center gap-3 text-white/80 bg-white/5 rounded-lg py-3 px-4">
