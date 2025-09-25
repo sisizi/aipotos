@@ -156,21 +156,21 @@ const ProModelSection = () => {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors cursor-pointer"
                     >
                       <Eye className="w-5 h-5" />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors cursor-pointer"
                     >
                       <Heart className="w-5 h-5" />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                      className="bg-white/20 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/30 transition-colors cursor-pointer"
                     >
                       <Download className="w-5 h-5" />
                     </motion.button>
@@ -243,7 +243,7 @@ const ProModelSection = () => {
                 boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)' 
               }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-lg transition-all duration-200 flex items-center space-x-2 mx-auto"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-lg transition-all duration-200 flex items-center space-x-2 mx-auto cursor-pointer"
             >
               <span>Join Community</span>
               <ArrowRight className="w-5 h-5" />

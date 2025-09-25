@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prompt, userId, inputImage, strength = 0.8, ...otherParams } = body;
+    const { prompt, userId, inputImage, inputImages, strength = 0.8, ...otherParams } = body;
 
     // 验证必需参数
     if (!prompt || !userId) {
@@ -25,10 +25,13 @@ export async function POST(request: NextRequest) {
       } as APIResponse, { status: 400 });
     }
 
-    if (!inputImage) {
+    // 支持单图和多图输入
+    const imagesToProcess = inputImages || (inputImage ? [inputImage] : []);
+
+    if (imagesToProcess.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'Input image is required for editing',
+        error: 'At least one input image is required for editing',
       } as APIResponse, { status: 400 });
     }
 
@@ -46,17 +49,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`Starting image editing for user ${userId}`);
     console.log(`Prompt: "${prompt.substring(0, 100)}..."`);
-    console.log(`Input image: ${inputImage.substring(0, 50)}...`);
+    console.log(`Input images count: ${imagesToProcess.length}`);
+    console.log(`First image: ${imagesToProcess[0].substring(0, 50)}...`);
 
     // 1. 创建任务记录
     taskId = await dbService.createTask({
       user_id: userId,
       task_type: 'edit',
       status: 'pending',
-      input_image_url: inputImage,
+      input_image_url: imagesToProcess[0], // 主图片
       input_prompt: prompt,
       input_params: {
         strength,
+        inputImages: imagesToProcess, // 保存所有输入图片
+        imageCount: imagesToProcess.length,
         ...otherParams,
       },
     });
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
     // 2. 创建 Nano Banana 编辑任务
     const startTime = Date.now();
     const nanoBananaTaskId = await nanoBananaService.createEditTask({
-      image_url: inputImage,
+      image_urls: imagesToProcess,
       prompt,
       strength,
     });

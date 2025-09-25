@@ -2,7 +2,6 @@
  * 数据库相关类型定义
  */
 
-import { DefaultSession } from 'next-auth'
 
 // 如果您使用Supabase生成的类型，可以这样导入：
 // import { Database } from './database.types';
@@ -69,29 +68,3 @@ export type UserRow = DatabaseUserRecord;
 export type UserInsert = Omit<DatabaseUserRecord, 'id' | 'created_at' | 'updated_at'>;
 export type UserUpdate = Partial<Omit<DatabaseUserRecord, 'id' | 'created_at' | 'updated_at'>>;
 
-// Extended Session type for Next-Auth
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string | null;
-      image?: string | null;
-    } & DefaultSession['user'];
-    accessToken?: string;
-  }
-
-  interface User {
-    id: string;
-    email: string;
-    name?: string | null;
-    image?: string | null;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    accessToken?: string;
-    sub?: string;
-  }
-}

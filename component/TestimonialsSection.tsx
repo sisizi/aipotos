@@ -209,7 +209,7 @@ const TestimonialsSection = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={prevTestimonial}
-                className="bg-white/10 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/20 transition-colors"
+                className="bg-white/10 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/20 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-5 h-5" />
               </motion.button>
@@ -223,7 +223,7 @@ const TestimonialsSection = () => {
                       setCurrentTestimonial(index);
                       setIsAutoPlaying(false); // 手动切换后停止自动轮播
                     }}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    className={`w-3 h-3 rounded-full transition-all duration-300 cursor-pointer ${
                       index === currentTestimonial
                         ? 'bg-blue-500 w-8'
                         : 'bg-white/30 hover:bg-white/50'
@@ -236,7 +236,7 @@ const TestimonialsSection = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={nextTestimonial}
-                className="bg-white/10 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/20 transition-colors"
+                className="bg-white/10 backdrop-blur-custom text-white p-3 rounded-full hover:bg-white/20 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
@@ -246,7 +246,7 @@ const TestimonialsSection = () => {
             <div className="flex justify-center mt-6">
               <button
                 onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
                   isAutoPlaying
                     ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                     : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'

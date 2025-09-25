@@ -66,7 +66,7 @@ const HeroSection = () => {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="flex justify-center"
         >
-          <Link href="/edit-image" className="group flex items-center gap-6 px-8 py-5 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md shadow-sm hover:border-amber-200/70 hover:bg-white/10 transition-colors duration-300">
+          <Link href="/edit-image" className="group flex items-center gap-6 px-8 py-5 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md shadow-sm hover:border-amber-200/70 hover:bg-white/10 transition-colors duration-300 cursor-pointer">
             <span className="text-white/90 text-xl font-semibold">Get Started</span>
             <span className="h-8 w-px bg-white/15" />
             <div className="flex items-center gap-4">
@@ -77,7 +77,7 @@ const HeroSection = () => {
                     key={item.id}
                     type="button"
                     onClick={() => setSelected(isSelected ? null : item.id)}
-                    className="relative group/icon focus:outline-none"
+                    className="relative group/icon focus:outline-none cursor-pointer"
                     aria-pressed={isSelected}
                     aria-label={item.label}
                     title={item.label}

@@ -248,16 +248,24 @@ export class NanoBananaAPIService {
    * @returns 任务ID
    */
   async createEditTask(params: {
-    image_url: string;
+    image_url?: string; // 兼容单图
+    image_urls?: string[]; // 支持多图
     prompt: string;
     mask_url?: string;
     strength?: number;
   }): Promise<string> {
+    // 支持单图或多图输入
+    const imageUrls = params.image_urls || (params.image_url ? [params.image_url] : []);
+
+    if (imageUrls.length === 0) {
+      throw new AIServiceError('At least one image URL is required for editing', 'MISSING_IMAGE');
+    }
+
     const requestData: NanoBananaCreateTaskRequest = {
       model: 'google/nano-banana-edit',  // 专门的图片编辑模型
       input: {
         prompt: params.prompt,
-        image_urls: [params.image_url],
+        image_urls: imageUrls,
         output_format: 'png',
         image_size: 'auto', // 保持原始尺寸
         strength: params.strength || 0.8,
@@ -269,7 +277,8 @@ export class NanoBananaAPIService {
     console.log('Creating image editing task with params:', {
       model: requestData.model,
       prompt: params.prompt.substring(0, 100) + '...',
-      hasInputImage: !!params.image_url,
+      imageCount: imageUrls.length,
+      imageUrls: imageUrls.map(url => url.substring(0, 50) + '...'),
       strength: params.strength || 0.8
     });
 

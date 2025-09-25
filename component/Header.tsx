@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 // Lucide React: 轻量级图标库
 import { Menu, X, Globe } from "lucide-react";
-import LoginButton from "./auth/login-button";
 
 
 /**
@@ -74,7 +73,7 @@ const Header = () => {
               <motion.a
                 key={item}
                 href="#"
-                className="text-white hover:text-blue-300 transition-colors duration-200 relative group text-xl"
+                className="text-white hover:text-blue-300 transition-colors duration-200 relative group text-xl cursor-pointer"
                 whileHover={{ y: -2 }}
               >
                 {item}
@@ -89,7 +88,7 @@ const Header = () => {
             {/* 语言选择 */}
             <motion.div whileHover={{ scale: 1.05 }} className="relative group">
 
-              <button className="flex items-center space-x-1 text-white hover:text-blue-300 transition-colors text-xl">
+              <button className="flex items-center space-x-1 text-white hover:text-blue-300 transition-colors text-xl cursor-pointer">
                 <Globe className="w-4 h-4" />
                 <span>EN</span>
               </button>
@@ -99,19 +98,19 @@ const Header = () => {
                 <div className="py-2">
                   <a
                     href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10"
+                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
                   >
                     中文
                   </a>
                   <a
                     href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10"
+                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
                   >
                     日本語
                   </a>
                   <a
                     href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10"
+                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
                   >
                     한국어
                   </a>
@@ -119,13 +118,12 @@ const Header = () => {
               </div>
             </motion.div>
 
-            {/* 登录按钮*/}
-            <LoginButton />
+            {/* 登录按钮 - 已移除 */}
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-white cursor-pointer"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? (
@@ -150,15 +148,13 @@ const Header = () => {
               <a
                 key={item}
                 href="#"
-                className="block text-white hover:text-blue-300 transition-colors"
+                className="block text-white hover:text-blue-300 transition-colors cursor-pointer"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item}
               </a>
             ))}
-            <div className="pt-4 border-t border-white/20">
-              <LoginButton />
-            </div>
+            {/* 移动端登录按钮 - 已移除 */}
           </div>
         </motion.div>
       </div>

@@ -111,7 +111,7 @@ const Footer = () => {
                   href={social.href}
                   whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-white/10 backdrop-blur-custom text-gray-400 hover:text-white p-3 rounded-xl hover:bg-white/20 transition-all duration-200"
+                  className="bg-white/10 backdrop-blur-custom text-gray-400 hover:text-white p-3 rounded-xl hover:bg-white/20 transition-all duration-200 cursor-pointer"
                 >
                   {social.icon}
                 </motion.a>
@@ -135,7 +135,7 @@ const Footer = () => {
                     <motion.a
                       href={link.href}
                       whileHover={{ x: 5 }}
-                      className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group"
+                      className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
                       <span>{link.name}</span>
                       <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -172,7 +172,7 @@ const Footer = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center space-x-2"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer"
               >
                 <span>Subscribe</span>
                 <ArrowRight className="w-4 h-4" />

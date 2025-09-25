@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Copy, Sparkles, Download, Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import MouseParticles from '@/component/MouseParticles';
 
 /**
  * 编辑图片页面组件 - 支持异步任务处理
@@ -14,6 +15,7 @@ const EditImagePage = () => {
   // 状态管理
   const [selectedTab, setSelectedTab] = useState<'edit' | 'create'>('edit'); // 当前选中的标签页（编辑或创建）
   const [uploadedImages, setUploadedImages] = useState<string[]>([]); // 已上传的图片URL列表
+  const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]); // 选中要编辑的图片索引数组（多选）
   const [prompt, setPrompt] = useState(''); // 用户输入的描述文本
   const [isGenerating, setIsGenerating] = useState(false); // 是否正在生成图片
   const [generatedImage, setGeneratedImage] = useState<string | null>(null); // 生成的图片URL
@@ -120,7 +122,10 @@ const EditImagePage = () => {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
+            // 自动选中新上传的图片
+            const newIndex = uploadedImages.length;
             setUploadedImages(prev => [...prev, result.data.url].slice(0, 5));
+            setSelectedImageIndices(prev => [...prev, newIndex]);
             console.log('上传成功:', result.data.url);
           } else {
             console.error('上传失败:', result.error || '未知错误');
@@ -268,92 +273,25 @@ const EditImagePage = () => {
 
   // 简单轮询已替代复杂的SSE和备用检查机制
 
-  // 查询任务最终状态
-  const checkFinalTaskStatus = async (taskId: string) => {
-    try {
-      console.log(`🔍 检查任务状态: ${taskId}`);
-
-      // 1. 优先检查快速缓存
-      const quickResponse = await fetch(`/api/tasks/${taskId}/quick`);
-      console.log(`📦 缓存检查响应状态: ${quickResponse.status}`);
-
-      if (quickResponse.ok) {
-        const quickResult = await quickResponse.json();
-        console.log('📦 缓存检查结果:', quickResult);
-
-        if (quickResult.success && quickResult.data) {
-          const task = quickResult.data;
-          if (task.status === 'completed' && task.output_image_url) {
-            console.log('从缓存获取到图像结果:', task.output_image_url);
-            setGeneratedImage(task.output_image_url);
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskProgress(100);
-            setTaskMessage(task.is_temporary ? '任务完成！图像正在后台保存...' : '任务完成！');
-            setTaskStartTime(null);
-            return; // 找到结果，直接返回
-          } else if (task.status === 'failed') {
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskStartTime(null);
-            alert(`任务失败: ${task.error_message || '未知错误'}`);
-            return;
-          }
-        }
-      }
-
-      // 2. 缓存中没有结果，检查数据库
-      console.log('🗄️ 缓存中没有找到结果，检查数据库...');
-      const taskResponse = await fetch(`/api/tasks/${taskId}?userId=${userId}`);
-      console.log(`🗄️ 数据库检查响应状态: ${taskResponse.status}`);
-
-      if (taskResponse.ok) {
-        const taskResult = await taskResponse.json();
-        console.log('🗄️ 数据库检查结果:', taskResult);
-
-        if (taskResult.success && taskResult.data) {
-          const task = taskResult.data;
-          if (task.status === 'completed' && task.output_image_url) {
-            setGeneratedImage(task.output_image_url);
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskProgress(100);
-            setTaskMessage('任务完成！');
-            setTaskStartTime(null);
-            console.log('从数据库获取到图像结果:', task.output_image_url);
-          } else if (task.status === 'failed') {
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskStartTime(null);
-            const errorMsg = task.error_message || '未知错误';
-            if (errorMsg.includes('timed out')) {
-              alert('任务超时（10分钟），AI服务没有及时响应，请稍后重试');
-            } else {
-              alert(`任务失败: ${errorMsg}`);
-            }
-          } else {
-            // 任务仍在进行中（但SSE连接已断开）
-            setIsGenerating(false);
-            setCurrentTaskId(null);
-            setTaskStartTime(null);
-            alert('任务仍在处理中，但网络连接中断。请稍后刷新页面查看结果。');
-          }
-        }
-      }
-    } catch (error) {
-      console.error('查询任务状态失败:', error);
-      setIsGenerating(false);
-      setCurrentTaskId(null);
-      setTaskStartTime(null);
-      alert('网络错误，无法检查任务状态。请稍后刷新页面重试。');
-    }
-  };
 
   const handleGenerate = async () => {
     if (!prompt.trim() || !userId) {
       if (!userId) {
         alert('正在初始化用户信息，请稍后重试');
+      } else {
+        alert('请输入描述文本');
       }
+      return;
+    }
+
+    // 编辑模式下需要确保有选中的图片
+    if (selectedTab === 'edit' && uploadedImages.length === 0) {
+      alert('编辑模式需要先上传图片');
+      return;
+    }
+
+    if (selectedTab === 'edit' && selectedImageIndices.length === 0) {
+      alert('请选择要编辑的图片（点击图片即可选择）');
       return;
     }
 
@@ -373,8 +311,8 @@ const EditImagePage = () => {
       const requestBody = {
         prompt: prompt.trim(),
         userId: userId,
-        // 如果是编辑模式且有上传的图片，传入第一张图片
-        inputImage: isEditMode ? uploadedImages[0] : undefined,
+        // 如果是编辑模式且有选中的图片，传入所有选中的图片
+        inputImages: isEditMode ? selectedImageIndices.map(index => uploadedImages[index]) : undefined,
         // 生成参数
         width: 512,
         height: 512,
@@ -387,7 +325,7 @@ const EditImagePage = () => {
 
       console.log('创建异步任务:', apiEndpoint, {
         ...requestBody,
-        inputImage: requestBody.inputImage ? '[IMAGE_URL]' : undefined
+        inputImages: requestBody.inputImages ? `[${requestBody.inputImages.length} IMAGE URLs]` : undefined
       });
 
       const response = await fetch(apiEndpoint, {
@@ -462,6 +400,9 @@ const EditImagePage = () => {
 
   return (
     <div className="min-h-screen text-white" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
+      {/* 鼠标粒子效果 */}
+      <MouseParticles />
+
       {/* 顶部导航 */}
       <div className="border-b border-white/10 backdrop-blur-md" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -477,12 +418,12 @@ const EditImagePage = () => {
             </Link>
 
             <div className="flex items-center gap-4 -mr-8">
-              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center">
+              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center cursor-pointer">
                 <Share2 className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
               </button>
               <button
                 onClick={downloadGeneratedImage}
-                className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center"
+                className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center cursor-pointer"
                 title={generatedImage ? "下载图片" : "暂无可下载图片"}
               >
                 <Download className={`w-4 h-4 transition-colors ${generatedImage ? 'group-hover:text-blue-400' : 'text-gray-500'}`} />
@@ -503,7 +444,7 @@ const EditImagePage = () => {
                   setSelectedTab('edit');
                   setGeneratedImage(null); // 清除生成的图片
                 }}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 cursor-pointer ${
                   selectedTab === 'edit'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -517,7 +458,7 @@ const EditImagePage = () => {
                   setSelectedTab('create');
                   setGeneratedImage(null); // 清除生成的图片
                 }}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 ${
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors flex-1 cursor-pointer ${
                   selectedTab === 'create'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'bg-white/5 text-white/70 hover:bg-white/10'
@@ -531,28 +472,75 @@ const EditImagePage = () => {
             {/* 参考图片上传区域 - 在Create模式下隐藏 */}
             {selectedTab === 'edit' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Reference Images (up to 5)</h3>
+              <div>
+                <h3 className="text-lg font-semibold">Reference Images (up to 5)</h3>
+                <p className="text-sm text-white/60 mt-1">
+                  {uploadedImages.length > 0
+                    ? selectedImageIndices.length > 0
+                      ? `Selected ${selectedImageIndices.length} image${selectedImageIndices.length > 1 ? 's' : ''} for combination editing (order: ${selectedImageIndices.map(i => i + 1).join(', ')}). Click images to deselect.`
+                      : 'Images auto-selected for editing. Click to deselect any you don\'t want to use.'
+                    : 'Upload images to start editing - they will be auto-selected for you'
+                  }
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 {/* 显示已上传的图片 */}
-                {uploadedImages.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border-2 border-dashed border-white/20">
-                      <Image
-                        src={image}
-                        alt={`Reference ${index + 1}`}
-                        width={200}
-                        height={200}
-                        className="w-full h-full object-cover"
-                      />
+                {uploadedImages.map((image, index) => {
+                  const isSelected = selectedImageIndices.includes(index);
+                  const selectionOrder = selectedImageIndices.indexOf(index) + 1;
+
+                  return (
+                    <div key={index} className="relative group">
+                      <div
+                        onClick={() => {
+                          setSelectedImageIndices(prev => {
+                            if (isSelected) {
+                              // 取消选择
+                              return prev.filter(i => i !== index);
+                            } else {
+                              // 添加选择
+                              return [...prev, index];
+                            }
+                          });
+                        }}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all duration-200 ${
+                          isSelected
+                            ? 'border-blue-500 ring-2 ring-blue-500/50'
+                            : 'border-dashed border-white/20 hover:border-blue-400'
+                        }`}
+                      >
+                        <Image
+                          src={image}
+                          alt={`Reference ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* 多选指示器 */}
+                        {isSelected && (
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{selectionOrder}</span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // 阻止事件冒泡
+                          setUploadedImages(prev => prev.filter((_, i) => i !== index));
+                          // 更新选中状态：移除被删除的索引，并调整其他索引
+                          setSelectedImageIndices(prev =>
+                            prev
+                              .filter(i => i !== index) // 移除被删除的索引
+                              .map(i => i > index ? i - 1 : i) // 调整大于被删除索引的数值
+                          );
+                        }}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600 transition-colors z-10 cursor-pointer"
+                      >
+                        ×
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setUploadedImages(prev => prev.filter((_, i) => i !== index))}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs hover:bg-red-600 transition-colors"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* 显示正在上传的loading状态 */}
                 {Array.from(uploadingSlots).map((slotIndex) => (
@@ -591,10 +579,17 @@ const EditImagePage = () => {
             {/* 描述输入区域 */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <label className="text-lg font-semibold">What changes would you like to make?</label>
+                <label className="text-lg font-semibold">
+                  {selectedTab === 'edit' && selectedImageIndices.length > 1
+                    ? 'How would you like to combine and edit these images?'
+                    : selectedTab === 'edit'
+                    ? 'What changes would you like to make?'
+                    : 'Describe the image you want to create'
+                  }
+                </label>
                 <button
                   onClick={copyPrompt}
-                  className="p-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors"
+                  className="p-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors cursor-pointer"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
@@ -604,7 +599,13 @@ const EditImagePage = () => {
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="E.g. Change the background to a sunset beach scene."
+                  placeholder={
+                    selectedTab === 'edit' && selectedImageIndices.length > 1
+                      ? "E.g. Combine the first and second image, merge them into a single scene, put the person from image 1 into the background of image 2"
+                      : selectedTab === 'edit'
+                      ? "E.g. Change the background to a sunset beach scene, add more colorful flowers"
+                      : "E.g. A beautiful landscape with mountains and a lake at sunset"
+                  }
                   className="w-full h-48 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-colors resize-none"
                 />
                 <div className="absolute bottom-2 right-2 text-xs text-white/40">
@@ -616,7 +617,11 @@ const EditImagePage = () => {
             {/* 生成按钮 */}
             <button
               onClick={handleGenerate}
-              disabled={isGenerating || !prompt.trim()}
+              disabled={
+                isGenerating ||
+                !prompt.trim() ||
+                (selectedTab === 'edit' && (uploadedImages.length === 0 || selectedImageIndices.length === 0))
+              }
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-blue-500/50 disabled:to-purple-600/50 disabled:cursor-not-allowed rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25"
             >
               <Sparkles className="w-5 h-5" />
