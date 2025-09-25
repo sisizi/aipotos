@@ -16,6 +16,7 @@ const EditImagePage = () => {
   const [selectedTab, setSelectedTab] = useState<'edit' | 'create'>('edit'); // 当前选中的标签页（编辑或创建）
   const [uploadedImages, setUploadedImages] = useState<string[]>([]); // 已上传的图片URL列表
   const [selectedImageIndices, setSelectedImageIndices] = useState<number[]>([]); // 选中要编辑的图片索引数组（多选）
+  const [pendingUploadCount, setPendingUploadCount] = useState<number>(0); // 记录正在上传的图片数量
   const [prompt, setPrompt] = useState(''); // 用户输入的描述文本
   const [isGenerating, setIsGenerating] = useState(false); // 是否正在生成图片
   const [generatedImage, setGeneratedImage] = useState<string | null>(null); // 生成的图片URL
@@ -77,42 +78,55 @@ const EditImagePage = () => {
       return;
     }
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (file.size > 10 * 1024 * 1024) { // 改为10MB限制，与API一致
+    const filesToUpload = Array.from(files);
+    const initialImageCount = uploadedImages.length;
+
+    // 检查文件大小和数量限制
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      if (file.size > 10 * 1024 * 1024) {
         alert('图片大小不能超过10MB');
-        continue;
+        return;
       }
-
-      if (uploadedImages.length + i >= 5) {
+      if (initialImageCount + filesToUpload.length > 5) {
         alert('最多只能上传5张图片');
-        break;
+        return;
       }
+    }
 
-      // 计算当前上传slot的索引
-      const currentSlotIndex = uploadedImages.length + i;
+    // 设置待上传数量
+    setPendingUploadCount(filesToUpload.length);
+
+    // 记录批量上传开始时的图片索引，用于后续自动选中
+    const startingIndex = uploadedImages.length;
+    const expectedNewIndices: number[] = [];
+
+    for (let i = 0; i < filesToUpload.length; i++) {
+      expectedNewIndices.push(startingIndex + i);
+    }
+
+    // 批量上传所有图片
+    const uploadPromises = filesToUpload.map(async (file, index) => {
+      const currentSlotIndex = startingIndex + index;
 
       // 2秒后显示loading状态
       const loadingTimeout = setTimeout(() => {
         setUploadingSlots(prev => new Set([...prev, currentSlotIndex]));
       }, 2000);
 
-      // 上传到Cloudflare R2
       try {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('userId', userId); // 添加userId参数
-        formData.append('type', 'image'); // 添加文件类型参数
+        formData.append('userId', userId);
+        formData.append('type', 'image');
 
         const response = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
 
-        // 清除loading timeout
         clearTimeout(loadingTimeout);
 
-        // 移除loading状态
         setUploadingSlots(prev => {
           const newSet = new Set(prev);
           newSet.delete(currentSlotIndex);
@@ -122,32 +136,64 @@ const EditImagePage = () => {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
-            // 自动选中新上传的图片
-            const newIndex = uploadedImages.length;
-            setUploadedImages(prev => [...prev, result.data.url].slice(0, 5));
-            setSelectedImageIndices(prev => [...prev, newIndex]);
-            console.log('上传成功:', result.data.url);
+            return { success: true, url: result.data.url, index };
           } else {
             console.error('上传失败:', result.error || '未知错误');
-            alert(`上传失败: ${result.error || '未知错误'}`);
+            return { success: false, error: result.error || '未知错误' };
           }
         } else {
           const errorText = await response.text();
           console.error('上传失败:', errorText);
-          alert(`上传失败: ${errorText}`);
+          return { success: false, error: errorText };
         }
       } catch (error) {
-        // 清除loading timeout和状态
         clearTimeout(loadingTimeout);
         setUploadingSlots(prev => {
           const newSet = new Set(prev);
           newSet.delete(currentSlotIndex);
           return newSet;
         });
-
         console.error('上传错误:', error);
-        alert(`上传错误: ${error instanceof Error ? error.message : '网络错误'}`);
+        return { success: false, error: error instanceof Error ? error.message : '网络错误' };
       }
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+
+      // 处理上传结果
+      const successfulUploads = results
+        .filter(result => result.success)
+        .sort((a, b) => (a.index || 0) - (b.index || 0)) // 按原始顺序排序
+        .map(result => result.url);
+
+      const failedUploads = results.filter(result => !result.success);
+
+      if (failedUploads.length > 0) {
+        const errorMessages = failedUploads.map(result => result.error).join(', ');
+        alert(`部分图片上传失败: ${errorMessages}`);
+      }
+
+      if (successfulUploads.length > 0) {
+        // 批量更新图片列表和选中状态
+        setUploadedImages(prev => {
+          const newImages = [...prev, ...successfulUploads].slice(0, 5);
+
+          // 批量选中所有成功上传的图片
+          const newIndices = successfulUploads.map((_, index) => startingIndex + index);
+          setSelectedImageIndices(prevSelected => {
+            // 合并现有选中和新上传的图片索引，并按数值排序
+            const combined = [...prevSelected, ...newIndices];
+            return [...new Set(combined)].sort((a, b) => a - b);
+          });
+
+          return newImages;
+        });
+      }
+
+    } finally {
+      // 重置待上传数量
+      setPendingUploadCount(0);
     }
   };
 
@@ -487,7 +533,9 @@ const EditImagePage = () => {
                 {/* 显示已上传的图片 */}
                 {uploadedImages.map((image, index) => {
                   const isSelected = selectedImageIndices.includes(index);
-                  const selectionOrder = selectedImageIndices.indexOf(index) + 1;
+                  // 显示序号基于在选中数组中的位置（按索引排序后的位置）
+                  const sortedSelected = [...selectedImageIndices].sort((a, b) => a - b);
+                  const selectionOrder = sortedSelected.indexOf(index) + 1;
 
                   return (
                     <div key={index} className="relative group">
@@ -498,8 +546,9 @@ const EditImagePage = () => {
                               // 取消选择
                               return prev.filter(i => i !== index);
                             } else {
-                              // 添加选择
-                              return [...prev, index];
+                              // 添加选择，并保持数组按索引排序
+                              const newSelected = [...prev, index];
+                              return newSelected.sort((a, b) => a - b);
                             }
                           });
                         }}
