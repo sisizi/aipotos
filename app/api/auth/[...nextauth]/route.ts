@@ -1,6 +1,7 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { UserService } from "@/lib/user";
+import { error } from "console";
 
 const authOptions: AuthOptions = {
   session: {
@@ -16,17 +17,14 @@ const authOptions: AuthOptions = {
     async signIn({ account, profile }) {
       if (account?.provider === 'google') {
         if (!profile?.email) {
-          console.error('Google profile missing email');
-          return false;
+          throw error('no profile')
         }
-
         try {
           console.log('🔐 Google sign-in attempt:', {
             email: profile.email,
             name: profile.name,
             hasAvatar: !!(profile as any).picture || !!profile.image
           });
-
           const result = await UserService.upsertUserByEmail(profile.email, {
             name: profile.name,
             avatar: (profile as any).picture || profile.image

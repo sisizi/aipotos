@@ -1,15 +1,6 @@
 /**
  * 数据库相关类型定义
  */
-
-
-// 如果您使用Supabase生成的类型，可以这样导入：
-// import { Database } from './database.types';
-// export type TaskRow = Database['public']['Tables']['tasks']['Row'];
-// export type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
-// export type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
-
-// 暂时使用手动定义的类型，您可以后续替换为Supabase生成的类型
 export interface DatabaseTaskRecord {
   id: string;
   user_id: string;
