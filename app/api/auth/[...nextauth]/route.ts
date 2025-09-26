@@ -46,6 +46,16 @@ const authOptions: AuthOptions = {
     async session({ session, token }) {
       if (token.userId && session.user) {
         session.user.id = token.userId as string;
+
+        // 从数据库获取用户头像信息
+        try {
+          const dbUser = await UserService.getCurrentUser(token.userId as string);
+          if (dbUser.data?.avatar) {
+            session.user.image = dbUser.data.avatar;
+          }
+        } catch (error) {
+          console.error('Error fetching user avatar in session:', error);
+        }
       }
       return session;
     }

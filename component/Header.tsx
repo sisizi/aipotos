@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { Menu, X, Globe, LogIn, LogOut, User } from "lucide-react";
 // NextAuth
 import { useSession, signIn, signOut } from "next-auth/react";
+// Next.js Image
+import Image from "next/image";
 
 
 /**
@@ -131,7 +133,19 @@ const Header = () => {
             ) : session ? (
               <motion.div whileHover={{ scale: 1.05 }} className="relative group">
                 <button className="flex items-center space-x-2 text-white hover:text-blue-300 transition-colors text-xl cursor-pointer">
-                  <User className="w-5 h-5" />
+                  {session.user?.image ? (
+                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20">
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name || "User avatar"}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                   <span className="max-w-[100px] truncate">
                     {session.user?.name || session.user?.email}
                   </span>
@@ -210,7 +224,19 @@ const Header = () => {
               ) : session ? (
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 text-white">
-                    <User className="w-5 h-5" />
+                    {session.user?.image ? (
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || "User avatar"}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
                     <div>
                       <p className="font-medium">{session.user?.name}</p>
                       <p className="text-sm text-gray-400">{session.user?.email}</p>
