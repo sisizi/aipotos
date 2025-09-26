@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 // Framer Motion: 提供高级动画功能
 import { motion } from "framer-motion";
 // Lucide React: 轻量级图标库
-import { Menu, X, Globe } from "lucide-react";
+import { Menu, X, Globe, LogIn, LogOut, User } from "lucide-react";
+// NextAuth
+import { useSession, signIn, signOut } from "next-auth/react";
 
 
 /**
@@ -15,6 +17,9 @@ const Header = () => {
   // 状态管理：跟踪页面滚动状态和移动端菜单展开状态
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // NextAuth session
+  const { data: session, status } = useSession();
 
   // 使用useEffect添加滚动事件监听器
   useEffect(() => {
@@ -94,7 +99,7 @@ const Header = () => {
               </button>
 {/* 一个隐藏在父元素下方、右对齐的下拉菜单容器，平时不可见，当用户悬停在父元素上时，会以淡入方式平滑显示出来。 */}
               <div className="absolute top-full right-0 mt-2 w-32 bg-black/90 backdrop-blur-custom rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-               
+
                 <div className="py-2">
                   <a
                     href="#"
@@ -118,7 +123,47 @@ const Header = () => {
               </div>
             </motion.div>
 
-            {/* 登录按钮 - 已移除 */}
+            {/* 用户认证区域 */}
+            {status === "loading" ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gray-600 rounded-full animate-pulse"></div>
+              </div>
+            ) : session ? (
+              <motion.div whileHover={{ scale: 1.05 }} className="relative group">
+                <button className="flex items-center space-x-2 text-white hover:text-blue-300 transition-colors text-xl cursor-pointer">
+                  <User className="w-5 h-5" />
+                  <span className="max-w-[100px] truncate">
+                    {session.user?.name || session.user?.email}
+                  </span>
+                </button>
+
+                <div className="absolute top-full right-0 mt-2 w-48 bg-black/90 backdrop-blur-custom rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="py-2">
+                    <div className="px-4 py-2 text-gray-300 border-b border-gray-700">
+                      <p className="text-sm">{session.user?.name}</p>
+                      <p className="text-xs text-gray-400">{session.user?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => signOut()}
+                      className="flex items-center space-x-2 w-full px-4 py-2 text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>退出登录</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => signIn('google')}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>登录</span>
+              </motion.button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -154,7 +199,47 @@ const Header = () => {
                 {item}
               </a>
             ))}
-            {/* 移动端登录按钮 - 已移除 */}
+
+            {/* 移动端用户认证区域 */}
+            <div className="border-t border-gray-700 pt-4 mt-4">
+              {status === "loading" ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gray-600 rounded-full animate-pulse"></div>
+                  <span className="text-white">加载中...</span>
+                </div>
+              ) : session ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 text-white">
+                    <User className="w-5 h-5" />
+                    <div>
+                      <p className="font-medium">{session.user?.name}</p>
+                      <p className="text-sm text-gray-400">{session.user?.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center space-x-2 w-full text-left text-white hover:text-red-300 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>退出登录</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    signIn('google');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-2 w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-300"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>登录</span>
+                </button>
+              )}
+            </div>
           </div>
         </motion.div>
       </div>
