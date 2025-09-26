@@ -2,13 +2,13 @@
  * User management utilities
  */
 
-import { supabase, supabaseAdmin } from './supabase'
+import { supabaseAdmin } from './supabase'
 import { UserRow, UserInsert, UserUpdate, DatabaseResponse } from './types'
 
 export class UserService {
   static async getCurrentUser(userId: string): Promise<DatabaseResponse<UserRow>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('id', userId)
@@ -50,7 +50,7 @@ export class UserService {
 
   static async updateUser(userId: string, userData: UserUpdate): Promise<DatabaseResponse<UserRow>> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('users')
         .update(userData)
         .eq('id', userId)
@@ -68,13 +68,22 @@ export class UserService {
     userData: { name?: string; avatar?: string }
   ): Promise<DatabaseResponse<UserRow>> {
     try {
+      const dbUserData: any = {
+        email,
+        updated_at: new Date().toISOString()
+      }
+
+      if (userData.name) {
+        dbUserData.name = userData.name
+      }
+
+      if (userData.avatar) {
+        dbUserData.avatar = userData.avatar
+      }
+
       const { data, error } = await supabaseAdmin
         .from('users')
-        .upsert({
-          email,
-          ...userData,
-          updated_at: new Date().toISOString()
-        })
+        .upsert(dbUserData)
         .select()
         .single()
 

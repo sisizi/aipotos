@@ -1,12 +1,9 @@
 -- Users table to store user information
 CREATE TABLE IF NOT EXISTS public.users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id SERIAL PRIMARY KEY,  -- 自动递增的整数ID
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255),
-  avatar_url TEXT,
-  credits INTEGER DEFAULT 100,
-  user_level VARCHAR(50) DEFAULT 'free',
-  provider VARCHAR(50) DEFAULT 'unknown',
+  avatar VARCHAR(255),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
