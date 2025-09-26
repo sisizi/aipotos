@@ -83,7 +83,7 @@ export class UserService {
 
       const { data, error } = await supabaseAdmin
         .from('users')
-        .upsert(dbUserData)
+        .upsert(dbUserData, { onConflict: 'email' })
         .select()
         .single()
 
