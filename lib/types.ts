@@ -56,10 +56,7 @@ export interface DatabaseUserRecord {
   id: string;
   email: string;
   name?: string | null;
-  avatar_url?: string | null;
-  credits: number;
-  user_level: 'free' | 'pro' | 'premium';
-  provider: string;
+  avatar?: string | null;
   created_at: string;
   updated_at: string;
 }
