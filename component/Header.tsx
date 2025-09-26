@@ -162,7 +162,7 @@ const Header = () => {
                       className="flex items-center space-x-2 w-full px-4 py-2 text-white hover:bg-white/10 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>退出登录</span>
+                      <span>log out</span>
                     </button>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const Header = () => {
                 className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <LogIn className="w-4 h-4" />
-                <span>登录</span>
+                <span>log in</span>
               </motion.button>
             )}
           </div>
