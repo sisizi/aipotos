@@ -1,0 +1,208 @@
+{
+  "metadata": {
+    "title": "AI画像生成 - 即座に生成、無限の想像力",
+    "description": "AIでワンクリックで高品質な画像を生成。創造力を解き放ち、すべてのインスピレーションを実現します。",
+    "keywords": "AI画像生成、人工知能、画像作成、クリエイティブデザイン"
+  },
+  "nav": {
+    "home": "ホーム",
+    "features": "機能",
+    "pricing": "料金",
+    "about": "について",
+    "product": "製品",
+    "docs": "ドキュメント",
+    "create": "作成",
+    "myCreations": "マイ作品",
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loading": "読み込み中..."
+  },
+  "hero": {
+    "title": "AI画像生成",
+    "subtitle": "即座に生成、無限の想像力",
+    "description": "AIでワンクリックで高品質な画像を生成",
+    "cta": "始める"
+  },
+  "common": {
+    "learnMore": "詳細を見る",
+    "getStarted": "始める",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました"
+  },
+  "useCases": {
+    "title": "ユースケースのインスピレーション",
+    "subtitle": "コンセプトから現実へ、AI画像生成技術はあらゆる業界に無限の可能性を提供します",
+    "cta": "さらなる可能性を探る",
+    "items": {
+      "novelComic": {
+        "title": "小説から漫画への生成",
+        "description": "テキストストーリーをビジュアル漫画に変換し、想像力を生き生きとさせます"
+      },
+      "businessPhoto": {
+        "title": "ビジネス写真編集",
+        "description": "商業画像の迅速な処理のためのスマート編集ツール"
+      },
+      "personalPhoto": {
+        "title": "個人写真の強化",
+        "description": "背景の置き換え、メイクの変更、衣装スタイリングで完璧な個人イメージを作成"
+      },
+      "poster": {
+        "title": "コピーからポスター生成",
+        "description": "イベントコピーを入力して、目を引くポスターデザインを自動生成"
+      },
+      "ecommerce": {
+        "title": "Eコマース製品最適化",
+        "description": "自動照明、背景除去、詳細強化で製品の魅力を向上"
+      },
+      "socialMedia": {
+        "title": "ソーシャルメディアアバター/背景カスタマイズ",
+        "description": "独自のスタイルを示すパーソナライズされたアバターとカバー画像をワンクリックで生成"
+      },
+      "architectural": {
+        "title": "建築デザインの視覚化",
+        "description": "スケッチや説明をリアルな建築レンダリングに変換"
+      },
+      "game": {
+        "title": "ゲームキャラクター/シーンコンセプトアート",
+        "description": "開発ワークフローを加速させるゲームアートアセットを迅速に制作"
+      },
+      "education": {
+        "title": "教育コンテンツイラスト",
+        "description": "教育内容に基づいたインテリジェントな画像生成でコースをより魅力的に"
+      },
+      "holiday": {
+        "title": "ホリデーカード/招待状デザイン",
+        "description": "テーマを入力して美しいホリデービジュアル素材を自動生成"
+      },
+      "fashion": {
+        "title": "ファッションデザインの視覚化",
+        "description": "スタイルの説明に基づいてファッションデザインスケッチを生成"
+      },
+      "video": {
+        "title": "ショート動画サムネイル生成",
+        "description": "スマートサムネイルデザインで動画のクリック率を向上"
+      }
+    }
+  },
+  "proModel": {
+    "title": "Pro/Maxモデルショーケース",
+    "subtitle": "最高級のAI生成アートワークを体験",
+    "pro": "Pro",
+    "max": "Max",
+    "likes": "いいね",
+    "views": "閲覧数"
+  },
+  "testimonials": {
+    "title": "ユーザー体験",
+    "subtitle": "世界中のユーザーからの実際のフィードバックを聞き、AI画像生成が創作プロセスをどのように変えているかを学びましょう",
+    "verified": "認証済み",
+    "like": "いいね",
+    "pauseSlideshow": "スライドショーを一時停止",
+    "startSlideshow": "スライドショーを開始",
+    "stats": {
+      "users": "満足したユーザー",
+      "images": "生成された画像",
+      "rating": "平均評価"
+    }
+  },
+  "imageEditor": {
+    "editImage": "画像を編集",
+    "createImage": "画像を作成",
+    "referenceImages": "参照画像（最大5枚）",
+    "selectedImages": "{count}枚の画像を組み合わせ編集用に選択しました（順序：{order}）。画像をクリックして選択解除してください。",
+    "clickToDeselect": "編集用に画像が自動選択されました。使用しない画像をクリックして選択解除してください。",
+    "uploadToStart": "編集を開始するには画像をアップロードしてください - 自動的に選択されます",
+    "addImage": "画像を追加",
+    "maxSize": "最大10MB",
+    "describeYourIdea": "アイデアを説明",
+    "combinePrompt": "これらの画像をどのように組み合わせて編集しますか？",
+    "editPrompt": "どのような変更を加えますか？",
+    "createPrompt": "作成したい画像を説明してください",
+    "copy": "コピー",
+    "placeholderCombine": "例：最初と2番目の画像を結合し、1つのシーンに統合し、画像1の人物を画像2の背景に配置",
+    "placeholderEdit": "例：背景を夕日のビーチシーンに変更し、カラフルな花を追加",
+    "placeholderCreate": "例：夕日の山と湖のある美しい風景",
+    "characters": "{count}/5000文字",
+    "generateNow": "今すぐ生成",
+    "processing": "処理中...",
+    "working": "作業中...",
+    "aiPainting": "🎨 AIがあなたの傑作を描いています...",
+    "typicalTime": "一般的な生成時間：",
+    "seconds": "20-30秒",
+    "stayOnPage": "魔法をかけている間、このページにお留まりください",
+    "readyToCreate": "作成準備完了",
+    "enterPrompt": "プロンプトを入力して生成をクリックして開始",
+    "editThisImage": "この画像を編集",
+    "download": "ダウンロード",
+    "viewMyCreations": "マイ作品を見る",
+    "uploading": "アップロード中...",
+    "imageUploaded": "画像のアップロードに成功しました",
+    "uploadFailed": "アップロード失敗",
+    "noImageToDownload": "ダウンロードする画像がありません",
+    "downloadFailed": "ダウンロード失敗",
+    "initializingUser": "ユーザー情報を初期化しています。もう一度お試しください",
+    "enterDescription": "説明を入力してください",
+    "editModeRequiresImages": "編集モードでは最初に画像をアップロードする必要があります",
+    "selectImages": "編集する画像を選択してください（画像をクリックして選択）",
+    "taskCreated": "タスクが作成されました。処理中...",
+    "taskCompleted": "タスク完了！",
+    "taskFailed": "タスク失敗：{error}",
+    "taskTimeout": "タスクタイムアウト（10分）",
+    "taskWillTimeout": "{seconds}秒後にタスクがタイムアウトします...",
+    "taskTimeoutMarking": "タスクタイムアウト、失敗としてマーク中...",
+    "imageSizeLimit": "画像サイズは10MBを超えることはできません",
+    "imageCountLimit": "最大5枚の画像のみ許可されています"
+  },
+  "footer": {
+    "brandName": "PhotoGen",
+    "tagline": "即座に生成し、無限に想像する。AI技術で創造力を解き放ち、すべてのインスピレーションを実現します。",
+    "contact": {
+      "email": "contact@aiphotogen.com",
+      "phone": "+86 400-123-4567",
+      "address": "北京朝陽テックパーク"
+    },
+    "product": {
+      "title": "製品",
+      "aiGeneration": "AI画像生成",
+      "batch": "バッチ処理",
+      "api": "APIインターフェース",
+      "pricing": "料金プラン",
+      "enterprise": "エンタープライズ"
+    },
+    "support": {
+      "title": "サポート",
+      "help": "ヘルプセンター",
+      "docs": "技術ドキュメント",
+      "community": "コミュニティフォーラム",
+      "contact": "お問い合わせ",
+      "status": "ステータスページ"
+    },
+    "communitySection": {
+      "title": "コミュニティ",
+      "gallery": "ユーザーギャラリー",
+      "challenges": "クリエイティブチャレンジ",
+      "developers": "開発者",
+      "partners": "パートナー",
+      "news": "ニュースと更新"
+    },
+    "legal": {
+      "title": "法的事項",
+      "privacy": "プライバシーポリシー",
+      "terms": "利用規約",
+      "copyright": "著作権表示",
+      "cookies": "Cookie ポリシー",
+      "gdpr": "GDPR準拠"
+    },
+    "subscribe": {
+      "title": "更新情報を購読",
+      "description": "最新のAI技術ニュース、製品アップデート、限定オファーを受け取る",
+      "placeholder": "メールアドレスを入力",
+      "button": "購読"
+    },
+    "copyright": "© 2025 AI PhotoGen. All rights reserved.",
+    "madeWith": "制作：",
+    "madeIn": "中国にて",
+    "userRating": "ユーザー評価",
+    "satisfiedUsers": "満足したユーザー"
+  }
+}

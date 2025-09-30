@@ -13,7 +13,7 @@ export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleLanguageChange = (newLocale: 'en' | 'zh') => {
+  const handleLanguageChange = (newLocale: 'en' | 'zh' | 'ko' | 'ja') => {
     router.replace(pathname, {locale: newLocale});
     setIsOpen(false);
   };
@@ -38,7 +38,9 @@ export default function LanguageSwitcher() {
 
   const languages = [
     { code: 'en', label: 'EN' },
-    { code: 'zh', label: '中文' }
+    { code: 'zh', label: '中文' },
+    { code: 'ko', label: '한국어' },
+    { code: 'ja', label: '日本語' }
   ];
 
   const currentLanguage = languages.find(lang => lang.code === locale);
@@ -63,7 +65,7 @@ export default function LanguageSwitcher() {
             {languages.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => handleLanguageChange(lang.code as 'en' | 'zh')}
+                onClick={() => handleLanguageChange(lang.code as 'en' | 'zh' | 'ko' | 'ja')}
                 className="block w-full text-left px-4 py-2 text-white hover:bg-white/10 cursor-pointer transition-colors"
               >
                 {lang.label}

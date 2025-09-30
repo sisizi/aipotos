@@ -328,7 +328,23 @@ const ImageEditorSection = () => {
   };
 
   return (
-    <section className="pt-8 pb-12 px-6">
+    <section className="pt-8 pb-12 px-6 relative">
+      {/* Aurora Background Effect - Balanced */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* 渐变遮罩层 - 边缘淡出 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30"></div>
+
+        {/* 极光光晕层 - 平衡的透明度和模糊 */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/12 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '8s' }}></div>
+        <div className="absolute top-1/4 right-1/4 w-[450px] h-[450px] bg-purple-500/10 rounded-full blur-[90px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
+        <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-cyan-500/8 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }}></div>
+        <div className="absolute top-1/2 right-1/3 w-[350px] h-[350px] bg-indigo-500/10 rounded-full blur-[85px] animate-pulse" style={{ animationDuration: '9s', animationDelay: '1s' }}></div>
+        <div className="absolute bottom-0 right-1/2 w-[480px] h-[480px] bg-violet-500/8 rounded-full blur-[95px] animate-pulse" style={{ animationDuration: '11s', animationDelay: '3s' }}></div>
+
+        {/* 额外的小光点增强效果 */}
+        <div className="absolute top-1/3 left-1/2 w-[200px] h-[200px] bg-blue-400/15 rounded-full blur-[60px] animate-pulse" style={{ animationDuration: '7s', animationDelay: '1.5s' }}></div>
+        <div className="absolute bottom-1/3 right-1/4 w-[250px] h-[250px] bg-purple-400/12 rounded-full blur-[70px] animate-pulse" style={{ animationDuration: '9.5s', animationDelay: '3.5s' }}></div>
+      </div>
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
           {/* Left Control Panel */}
