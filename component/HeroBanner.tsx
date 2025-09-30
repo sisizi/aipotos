@@ -16,14 +16,14 @@ const HeroBanner = () => {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
-    <section className="relative pt-32 pb-12 px-6">
+    <section className="relative pt-32 pb-8 px-6">
       <div className="relative z-10 max-w-6xl mx-auto text-center">
         {/* Main Title */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl md:text-7xl font-extrabold text-white mb-8"
+          className="text-3xl md:text-6xl font-extrabold text-white mb-8"
         >
           <span className="gradient-text">{t('title')}</span>
         </motion.h1>

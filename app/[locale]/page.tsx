@@ -5,6 +5,8 @@ import ProModelSection from '@/component/ProModelSection';
 import TestimonialsSection from '@/component/TestimonialsSection';
 import Footer from '@/component/Footer';
 import MouseParticles from '@/component/MouseParticles';
+import HeroBanner from '@/component/HeroBanner';
+import ImageEditorSection from '@/component/ImageEditorSection';
 
 export default function Home() {
   return (
@@ -19,8 +21,12 @@ export default function Home() {
       <main>
 
         
-        {/* 英雄区域 */}
-        <HeroSection />
+        {/* Hero Banner */}
+        <HeroBanner />
+
+        {/* 图像编辑区域 */}
+        <ImageEditorSection />
+
         
         
         {/* 使用场景 */}
