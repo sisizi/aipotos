@@ -1,0 +1,208 @@
+{
+  "metadata": {
+    "title": "AI Image Generation - Instant Creation, Infinite Imagination",
+    "description": "Generate high-quality images with AI in one click. Unleash your creativity and make every moment of inspiration come true.",
+    "keywords": "AI image generation, artificial intelligence, image creation, creative design"
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "product": "Product",
+    "docs": "Docs",
+    "create": "Create",
+    "myCreations": "My Creations",
+    "login": "Login",
+    "logout": "Logout",
+    "loading": "Loading..."
+  },
+  "hero": {
+    "title": "AI Image Generation",
+    "subtitle": "Instant Creation, Infinite Imagination",
+    "description": "Generate high-quality images with AI in one click",
+    "cta": "Get Started"
+  },
+  "common": {
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "loading": "Loading...",
+    "error": "An error occurred"
+  },
+  "useCases": {
+    "title": "Use Case Inspiration",
+    "subtitle": "From concept to reality, AI image generation technology provides unlimited possibilities for all industries",
+    "cta": "Start Exploring More Possibilities",
+    "items": {
+      "novelComic": {
+        "title": "Novel to Comic Generation",
+        "description": "Transform text stories into visual comics, bringing imagination to life"
+      },
+      "businessPhoto": {
+        "title": "Business Photo Editing",
+        "description": "Smart editing tools for quick commercial image processing"
+      },
+      "personalPhoto": {
+        "title": "Personal Photo Enhancement",
+        "description": "Background replacement, makeup changes, outfit styling for perfect personal image"
+      },
+      "poster": {
+        "title": "Copy to Poster Generation",
+        "description": "Input event copy and automatically generate eye-catching poster designs"
+      },
+      "ecommerce": {
+        "title": "E-commerce Product Optimization",
+        "description": "Auto lighting, background removal, detail enhancement to boost product appeal"
+      },
+      "socialMedia": {
+        "title": "Social Media Avatar/Background Customization",
+        "description": "One-click generation of personalized avatars and cover images showcasing unique style"
+      },
+      "architectural": {
+        "title": "Architectural Design Visualization",
+        "description": "Convert sketches or descriptions into realistic architectural renderings"
+      },
+      "game": {
+        "title": "Game Character/Scene Concept Art",
+        "description": "Quickly produce game art assets to accelerate development workflow"
+      },
+      "education": {
+        "title": "Educational Content Illustration",
+        "description": "Intelligent image generation based on teaching content to make courses more engaging"
+      },
+      "holiday": {
+        "title": "Holiday Card/Invitation Design",
+        "description": "Input themes to automatically generate beautiful holiday visual materials"
+      },
+      "fashion": {
+        "title": "Fashion Design Visualization",
+        "description": "Generate fashion design sketches based on style descriptions"
+      },
+      "video": {
+        "title": "Short Video Thumbnail Generation",
+        "description": "Smart thumbnail design to boost video click-through rates"
+      }
+    }
+  },
+  "proModel": {
+    "title": "Pro/Max Model Showcase",
+    "subtitle": "Experience top-tier AI-generated artwork",
+    "pro": "Pro",
+    "max": "Max",
+    "likes": "likes",
+    "views": "views"
+  },
+  "testimonials": {
+    "title": "User Experience",
+    "subtitle": "Listen to real feedback from users worldwide and learn how AI image generation is changing their creative process",
+    "verified": "Verified",
+    "like": "Like",
+    "pauseSlideshow": "Pause Slideshow",
+    "startSlideshow": "Start Slideshow",
+    "stats": {
+      "users": "Satisfied Users",
+      "images": "Generated Images",
+      "rating": "Average Rating"
+    }
+  },
+  "imageEditor": {
+    "editImage": "Edit Image",
+    "createImage": "Create Image",
+    "referenceImages": "Reference Images (up to 5)",
+    "selectedImages": "Selected {count} image{plural} for combination editing (order: {order}). Click images to deselect.",
+    "clickToDeselect": "Images auto-selected for editing. Click to deselect any you don't want to use.",
+    "uploadToStart": "Upload images to start editing - they will be auto-selected for you",
+    "addImage": "Add Image",
+    "maxSize": "Max 10MB",
+    "describeYourIdea": "Describe your idea",
+    "combinePrompt": "How would you like to combine and edit these images?",
+    "editPrompt": "What changes would you like to make?",
+    "createPrompt": "Describe the image you want to create",
+    "copy": "Copy",
+    "placeholderCombine": "E.g. Combine the first and second image, merge them into a single scene, put the person from image 1 into the background of image 2",
+    "placeholderEdit": "E.g. Change the background to a sunset beach scene, add more colorful flowers",
+    "placeholderCreate": "E.g. A beautiful landscape with mountains and a lake at sunset",
+    "characters": "{count}/5000 characters",
+    "generateNow": "Generate Now",
+    "processing": "Processing...",
+    "working": "Working...",
+    "aiPainting": "🎨 AI is painting your masterpiece...",
+    "typicalTime": "Typical generation time:",
+    "seconds": "20-30 seconds",
+    "stayOnPage": "Please stay on this page while we work our magic",
+    "readyToCreate": "Ready to Create",
+    "enterPrompt": "Enter your prompt and click Generate to start",
+    "editThisImage": "Edit this image",
+    "download": "Download",
+    "viewMyCreations": "View My Creations",
+    "uploading": "Uploading...",
+    "imageUploaded": "Image uploaded successfully",
+    "uploadFailed": "Upload failed",
+    "noImageToDownload": "No image to download",
+    "downloadFailed": "Download failed",
+    "initializingUser": "Initializing user info, please try again",
+    "enterDescription": "Please enter a description",
+    "editModeRequiresImages": "Edit mode requires uploading images first",
+    "selectImages": "Please select images to edit (click images to select)",
+    "taskCreated": "Task created, processing...",
+    "taskCompleted": "Task completed!",
+    "taskFailed": "Task failed: {error}",
+    "taskTimeout": "Task timeout (10 minutes)",
+    "taskWillTimeout": "Task will timeout in {seconds} seconds...",
+    "taskTimeoutMarking": "Task timeout, marking as failed...",
+    "imageSizeLimit": "Image size cannot exceed 10MB",
+    "imageCountLimit": "Maximum 5 images allowed"
+  },
+  "footer": {
+    "brandName": "PhotoGen",
+    "tagline": "Generate instantly, imagine infinitely. Unleash your creativity with AI technology, bringing every inspiration to life.",
+    "contact": {
+      "email": "contact@aiphotogen.com",
+      "phone": "+86 400-123-4567",
+      "address": "Chaoyang Tech Park, Beijing"
+    },
+    "product": {
+      "title": "Product",
+      "aiGeneration": "AI Image Generation",
+      "batch": "Batch Processing",
+      "api": "API Interface",
+      "pricing": "Pricing Plans",
+      "enterprise": "Enterprise"
+    },
+    "support": {
+      "title": "Support",
+      "help": "Help Center",
+      "docs": "Technical Docs",
+      "community": "Community Forum",
+      "contact": "Contact Us",
+      "status": "Status Page"
+    },
+    "communitySection": {
+      "title": "Community",
+      "gallery": "User Gallery",
+      "challenges": "Creative Challenges",
+      "developers": "Developers",
+      "partners": "Partners",
+      "news": "News & Updates"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "Copyright Notice",
+      "cookies": "Cookie Policy",
+      "gdpr": "GDPR Compliance"
+    },
+    "subscribe": {
+      "title": "Subscribe to Our Updates",
+      "description": "Get the latest AI technology news, product updates, and exclusive offers",
+      "placeholder": "Enter your email address",
+      "button": "Subscribe"
+    },
+    "copyright": "© 2025 AI PhotoGen. All rights reserved.",
+    "madeWith": "Made with",
+    "madeIn": "in China",
+    "userRating": "User Rating",
+    "satisfiedUsers": "Satisfied Users"
+  }
+}

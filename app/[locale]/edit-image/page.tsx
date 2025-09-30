@@ -4,13 +4,16 @@ import { useState, useRef, useEffect } from 'react';
 import { Copy, Sparkles, Download, Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import MouseParticles from '@/component/MouseParticles';
+import Header from '@/component/Header';
 
 /**
  * 编辑图片页面组件 - 支持异步任务处理
  * 提供图片上传、编辑和生成的功能界面
  */
 const EditImagePage = () => {
+  const t = useTranslations('imageEditor');
 
   // 状态管理
   const [selectedTab, setSelectedTab] = useState<'edit' | 'create'>('edit'); // 当前选中的标签页（编辑或创建）
@@ -53,10 +56,10 @@ const EditImagePage = () => {
 
         // 10分钟后显示超时警告
         if (elapsed >= 600) { // 10分钟 = 600秒
-          setTaskMessage('任务处理超时，正在自动标记为失败...');
+          setTaskMessage(t('taskTimeoutMarking'));
         } else if (elapsed >= 480) { // 8分钟后开始警告
           const remaining = 600 - elapsed;
-          setTaskMessage(`任务将在 ${remaining} 秒后超时，请耐心等待...`);
+          setTaskMessage(t('taskWillTimeout', { seconds: remaining }));
         }
       }, 1000);
     }
@@ -73,7 +76,7 @@ const EditImagePage = () => {
     const files = event.target.files;
     if (!files || !userId) {
       if (!userId) {
-        alert('正在初始化用户信息，请稍后重试');
+        alert(t('initializingUser'));
       }
       return;
     }
@@ -85,11 +88,11 @@ const EditImagePage = () => {
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       if (file.size > 10 * 1024 * 1024) {
-        alert('图片大小不能超过10MB');
+        alert(t('imageSizeLimit'));
         return;
       }
       if (initialImageCount + filesToUpload.length > 5) {
-        alert('最多只能上传5张图片');
+        alert(t('imageCountLimit'));
         return;
       }
     }
@@ -203,7 +206,7 @@ const EditImagePage = () => {
   const startSimplePolling = (taskId: string) => {
     setCurrentTaskId(taskId);
     setTaskProgress(10);
-    setTaskMessage('任务已创建，正在处理中...');
+    setTaskMessage(t('taskCreated'));
 
     let checkCount = 0;
     const maxChecks = 120; // 10分钟
@@ -235,7 +238,7 @@ const EditImagePage = () => {
                 setIsGenerating(false);
                 setCurrentTaskId(null);
                 setTaskProgress(100);
-                setTaskMessage('任务完成！');
+                setTaskMessage(t('taskCompleted'));
                 setTaskStartTime(null);
                 return;
               } else if (task.status === 'failed') {
@@ -245,7 +248,7 @@ const EditImagePage = () => {
                 setTaskStartTime(null);
                 setTaskProgress(0);
                 setTaskMessage('');
-                alert(`任务失败: ${task.error_message || '未知错误'}`);
+                alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
                 return;
               }
             }
@@ -272,7 +275,7 @@ const EditImagePage = () => {
               setIsGenerating(false);
               setCurrentTaskId(null);
               setTaskProgress(100);
-              setTaskMessage('任务完成！');
+              setTaskMessage(t('taskCompleted'));
               setTaskStartTime(null);
               return;
 
@@ -283,7 +286,7 @@ const EditImagePage = () => {
               setTaskStartTime(null);
               setTaskProgress(0);
               setTaskMessage('');
-              alert(`任务失败: ${task.error_message || '未知错误'}`);
+              alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
               return;
             }
             // 如果状态是 'processing' 或其他，继续轮询
@@ -301,7 +304,7 @@ const EditImagePage = () => {
           setTaskStartTime(null);
           setTaskProgress(0);
           setTaskMessage('');
-          alert('任务超时（10分钟），请稍后重试');
+          alert(t('taskTimeout'));
         }
 
       } catch (error) {
@@ -323,21 +326,21 @@ const EditImagePage = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || !userId) {
       if (!userId) {
-        alert('正在初始化用户信息，请稍后重试');
+        alert(t('initializingUser'));
       } else {
-        alert('请输入描述文本');
+        alert(t('enterDescription'));
       }
       return;
     }
 
     // 编辑模式下需要确保有选中的图片
     if (selectedTab === 'edit' && uploadedImages.length === 0) {
-      alert('编辑模式需要先上传图片');
+      alert(t('editModeRequiresImages'));
       return;
     }
 
     if (selectedTab === 'edit' && selectedImageIndices.length === 0) {
-      alert('请选择要编辑的图片（点击图片即可选择）');
+      alert(t('selectImages'));
       return;
     }
 
@@ -390,20 +393,20 @@ const EditImagePage = () => {
           startSimplePolling(result.data.taskId);
         } else {
           console.error('任务创建失败:', result.error || '未知错误');
-          alert(`任务创建失败: ${result.error || '未知错误'}`);
+          alert(t('taskFailed', { error: result.error || 'Unknown error' }));
           setIsGenerating(false);
           setTaskStartTime(null);
         }
       } else {
         const errorText = await response.text();
         console.error('任务创建失败:', errorText);
-        alert(`任务创建失败: ${errorText}`);
+        alert(t('taskFailed', { error: errorText }));
         setIsGenerating(false);
         setTaskStartTime(null);
       }
     } catch (error) {
       console.error('任务创建失败:', error);
-      alert(`任务创建失败: ${error instanceof Error ? error.message : '网络错误'}`);
+      alert(t('taskFailed', { error: error instanceof Error ? error.message : 'Network error' }));
       setIsGenerating(false);
       setTaskStartTime(null);
     }
@@ -416,7 +419,7 @@ const EditImagePage = () => {
   // 下载生成的图片
   const downloadGeneratedImage = async () => {
     if (!generatedImage) {
-      alert('没有可下载的图片');
+      alert(t('noImageToDownload'));
       return;
     }
 
@@ -439,7 +442,7 @@ const EditImagePage = () => {
 
     } catch (error) {
       console.error('下载失败:', error);
-      alert('下载失败，请稍后重试');
+      alert(t('downloadFailed'));
     }
   };
 
@@ -449,40 +452,13 @@ const EditImagePage = () => {
       {/* 鼠标粒子效果 */}
       <MouseParticles />
 
-      {/* 顶部导航 */}
-      <div className="border-b border-white/10 backdrop-blur-md" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }}>
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between ">
-            <Link
-              href="/"
-              className="flex items-center space-x-2 hover:scale-105 transition-all duration-200 -ml-4"
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center ">
-                <span className="text-white font-bold text-lg">AI</span>
-              </div>
-              <span className="text-white text-2xl font-bold">AI Art Studio</span>
-            </Link>
+      {/* 使用统一的Header组件 */}
+      <Header />
 
-            <div className="flex items-center gap-4 -mr-8">
-              <button className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center cursor-pointer">
-                <Share2 className="w-4 h-4 group-hover:text-blue-400 transition-colors" />
-              </button>
-              <button
-                onClick={downloadGeneratedImage}
-                className="w-10 h-10 rounded-full border border-white/20 hover:bg-white/5 transition-colors group flex items-center justify-center cursor-pointer"
-                title={generatedImage ? "下载图片" : "暂无可下载图片"}
-              >
-                <Download className={`w-4 h-4 transition-colors ${generatedImage ? 'group-hover:text-blue-400' : 'text-gray-500'}`} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="w-4/5 max-w-10xl mx-auto px-8 pt-16 pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
           {/* 左侧控制面板 */}
-          <div className="space-y-6 p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
+          <div className="flex flex-col space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md h-full">
             {/* 标签页 */}
             <div className="flex gap-2 justify-center">
               <button
@@ -497,7 +473,7 @@ const EditImagePage = () => {
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                Edit Image
+                {t('editImage')}
               </button>
               <button
                 onClick={() => {
@@ -511,25 +487,32 @@ const EditImagePage = () => {
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                Create Image
+                {t('createImage')}
               </button>
             </div>
 
             {/* 参考图片上传区域 - 在Create模式下隐藏 */}
-            {selectedTab === 'edit' && (
-            <div className="space-y-4">
+            <div className={`space-y-4 overflow-hidden transition-all duration-500 ease-in-out ${
+              selectedTab === 'edit'
+                ? 'max-h-[1000px] opacity-100'
+                : 'max-h-0 opacity-0'
+            }`}>
               <div>
-                <h3 className="text-lg font-semibold">Reference Images (up to 5)</h3>
+                <h3 className="text-lg font-semibold">{t('referenceImages')}</h3>
                 <p className="text-sm text-white/60 mt-1">
                   {uploadedImages.length > 0
                     ? selectedImageIndices.length > 0
-                      ? `Selected ${selectedImageIndices.length} image${selectedImageIndices.length > 1 ? 's' : ''} for combination editing (order: ${selectedImageIndices.map(i => i + 1).join(', ')}). Click images to deselect.`
-                      : 'Images auto-selected for editing. Click to deselect any you don\'t want to use.'
-                    : 'Upload images to start editing - they will be auto-selected for you'
+                      ? t('selectedImages', {
+                          count: selectedImageIndices.length,
+                          plural: selectedImageIndices.length > 1 ? 's' : '',
+                          order: selectedImageIndices.map(i => i + 1).join(', ')
+                        })
+                      : t('clickToDeselect')
+                    : t('uploadToStart')
                   }
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {/* 显示已上传的图片 */}
                 {uploadedImages.map((image, index) => {
                   const isSelected = selectedImageIndices.includes(index);
@@ -596,7 +579,7 @@ const EditImagePage = () => {
                   <div key={`loading-${slotIndex}`} className="relative group">
                     <div className="aspect-square rounded-lg border-2 border-dashed border-blue-400/50 flex flex-col items-center justify-center bg-blue-500/10">
                       <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-                      <div className="text-xs text-blue-400">上传中...</div>
+                      <div className="text-xs text-blue-400">{t('uploading')}</div>
                     </div>
                   </div>
                 ))}
@@ -607,9 +590,9 @@ const EditImagePage = () => {
                     onClick={() => fileInputRef.current?.click()}
                     className="aspect-square rounded-lg border-2 border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-colors group"
                   >
-                    <div className="text-4xl text-white/40 group-hover:text-blue-400 transition-colors">+</div>
-                    <div className="text-sm text-white/60 mt-2">Add Image</div>
-                    <div className="text-xs text-white/40">Max 10MB</div>
+                    <div className="text-3xl text-white/40 group-hover:text-blue-400 transition-colors">+</div>
+                    <div className="text-xs text-white/60 mt-1">{t('addImage')}</div>
+                    <div className="text-xs text-white/40">{t('maxSize')}</div>
                   </div>
                 )}
               </div>
@@ -623,25 +606,18 @@ const EditImagePage = () => {
                 className="hidden"
               />
             </div>
-            )}
 
             {/* 描述输入区域 */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div>
                 <label className="text-lg font-semibold">
                   {selectedTab === 'edit' && selectedImageIndices.length > 1
-                    ? 'How would you like to combine and edit these images?'
+                    ? t('combinePrompt')
                     : selectedTab === 'edit'
-                    ? 'What changes would you like to make?'
-                    : 'Describe the image you want to create'
+                    ? t('editPrompt')
+                    : t('createPrompt')
                   }
                 </label>
-                <button
-                  onClick={copyPrompt}
-                  className="p-2 rounded-lg border border-white/20 hover:bg-white/5 transition-colors cursor-pointer"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
               </div>
 
               <div className="relative">
@@ -650,15 +626,15 @@ const EditImagePage = () => {
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder={
                     selectedTab === 'edit' && selectedImageIndices.length > 1
-                      ? "E.g. Combine the first and second image, merge them into a single scene, put the person from image 1 into the background of image 2"
+                      ? t('placeholderCombine')
                       : selectedTab === 'edit'
-                      ? "E.g. Change the background to a sunset beach scene, add more colorful flowers"
-                      : "E.g. A beautiful landscape with mountains and a lake at sunset"
+                      ? t('placeholderEdit')
+                      : t('placeholderCreate')
                   }
-                  className="w-full h-48 px-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-blue-400 transition-colors resize-none"
+                  className="w-full h-32 sm:h-40 lg:h-48 px-3 sm:px-4 py-2 sm:py-3 bg-white/5 border border-white/20 rounded-lg text-white text-sm sm:text-base placeholder-white/50 focus:outline-none focus:border-blue-400 transition-colors resize-none"
                 />
                 <div className="absolute bottom-2 right-2 text-xs text-white/40">
-                  {prompt.length}/5000 characters
+                  {t('characters', { count: prompt.length })}
                 </div>
               </div>
             </div>
@@ -674,75 +650,113 @@ const EditImagePage = () => {
               className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-blue-500/50 disabled:to-purple-600/50 disabled:cursor-not-allowed rounded-lg font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25"
             >
               <Sparkles className="w-5 h-5" />
-              {isGenerating ? 'Processing...' : 'Generate Now'}
+              {isGenerating ? t('processing') : t('generateNow')}
             </button>
 
           </div>
 
           {/* 右侧显示区域 */}
-          <div className="relative p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md">
-            <div className="h-[80vh] border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center">
-              {generatedImage ? (
-                <div className="relative w-full h-full group">
-                  <Image
-                    src={generatedImage}
-                    alt="Generated image"
-                    fill
-                    className="object-contain rounded-lg"
-                  />
+          <div className="flex flex-col h-full">
+            {/* 图片显示框 - 外框 */}
+            <div className="relative p-4 sm:p-6 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-md flex-1 transition-all duration-500 ease-in-out">
+              {/* 内框 - 固定高度 */}
+              <div className="h-[500px] border-2 border-dashed border-white/20 rounded-lg flex flex-col justify-between">
+                {/* 图片/状态显示区域 */}
+                <div className="flex-1 w-full flex items-center justify-center">
+                  {generatedImage ? (
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={generatedImage}
+                        alt="Generated image"
+                        fill
+                        className="object-contain rounded-lg"
+                      />
+                    </div>
+                  ) : isGenerating ? (
+                    <div className="text-center">
+                      {/* Enhanced Loading Animation */}
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
+                        <div className="absolute inset-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
+                          <Sparkles className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h3 className="text-white text-xl font-semibold">{t('working')}</h3>
+
+                        {/* Timer Display */}
+                        <div className="flex items-center justify-center gap-3 text-white/80 bg-white/5 rounded-lg py-3 px-4">
+                          <Clock className="w-5 h-5 text-blue-400" />
+                          <span className="text-2xl font-mono tracking-wider">
+                            {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+
+                        {/* Generation Tips */}
+                        <div className="bg-white/5 rounded-lg p-4 text-center">
+                          <p className="text-white/70 text-sm mb-2">{t('aiPainting')}</p>
+                          <p className="text-white/50 text-xs">
+                            {t('typicalTime')} <span className="text-blue-400 font-medium">{t('seconds')}</span>
+                          </p>
+                          <p className="text-white/40 text-xs mt-1">
+                            {t('stayOnPage')}
+                          </p>
+                        </div>
+
+                        {/* Animated Progress Indicator */}
+                        <div className="flex justify-center gap-1 mt-6">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-white/40">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-8 h-8" />
+                      </div>
+                      <p className="text-lg mb-2">{t('readyToCreate')}</p>
+                      <p className="text-sm">{t('enterPrompt')}</p>
+                    </div>
+                  )}
                 </div>
-              ) : isGenerating ? (
-                <div className="text-center">
-                  {/* Enhanced Loading Animation */}
-                  <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
-                    <div className="absolute inset-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
-                      <Sparkles className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-white text-xl font-semibold">Working...</h3>
-
-                    {/* Timer Display */}
-                    <div className="flex items-center justify-center gap-3 text-white/80 bg-white/5 rounded-lg py-3 px-4">
-                      <Clock className="w-5 h-5 text-blue-400" />
-                      <span className="text-2xl font-mono tracking-wider">
-                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                      </span>
-                    </div>
-
-                    {/* Generation Tips */}
-                    <div className="bg-white/5 rounded-lg p-4 text-center">
-                      <p className="text-white/70 text-sm mb-2">🎨 AI is painting your masterpiece...</p>
-                      <p className="text-white/50 text-xs">
-                        Typical generation time: <span className="text-blue-400 font-medium">20-30 seconds</span>
-                      </p>
-                      <p className="text-white/40 text-xs mt-1">
-                        Please stay on this page while we work our magic
-                      </p>
-                    </div>
-
-                    {/* Animated Progress Indicator */}
-                    <div className="flex justify-center gap-1 mt-6">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-white/40">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-white/5 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-8 h-8" />
-                  </div>
-                  <p className="text-lg mb-2">Ready to Create</p>
-                  <p className="text-sm">Enter your prompt and click Generate to start</p>
+              </div>
+              {/* 按钮组 - 只在图像生成后显示 */}
+              {generatedImage && (
+                <div className="flex items-center gap-3 flex-wrap mt-6">
+                  <button
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/20 bg-black/40 backdrop-blur-md hover:bg-black/60 transition-colors group cursor-pointer"
+                    title={t('editThisImage')}
+                  >
+                    <span className="text-sm text-white">{t('editThisImage')}</span>
+                  </button>
+                  <button
+                    onClick={downloadGeneratedImage}
+                    disabled={!generatedImage}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg border border-white/20 bg-black/40 backdrop-blur-md transition-colors group ${
+                      generatedImage
+                        ? 'hover:bg-black/60 cursor-pointer'
+                        : 'cursor-not-allowed opacity-50'
+                    }`}
+                    title={t('download')}
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                    <span className="text-sm text-white">{t('download')}</span>
+                  </button>
+                  <button
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg border border-white/20 bg-black/40 backdrop-blur-md hover:bg-black/60 transition-colors group cursor-pointer"
+                    title={t('viewMyCreations')}
+                  >
+                    <span className="text-sm text-white">{t('viewMyCreations')}</span>
+                  </button>
                 </div>
               )}
             </div>
           </div>
+          
         </div>
       </div>
     </div>

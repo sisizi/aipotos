@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import {
   Twitter,
   Linkedin,
@@ -14,45 +15,47 @@ import {
 } from 'lucide-react';
 
 const Footer = () => {
+  const t = useTranslations('footer');
+
   const footerLinks = {
     product: {
-      title: 'Product',
+      titleKey: 'product.title',
       links: [
-        { name: 'AI Image Generation', href: '#' },
-        { name: 'Batch Processing', href: '#' },
-        { name: 'API Interface', href: '#' },
-        { name: 'Pricing Plans', href: '#' },
-        { name: 'Enterprise', href: '#' }
+        { nameKey: 'product.aiGeneration', href: '#' },
+        { nameKey: 'product.batch', href: '#' },
+        { nameKey: 'product.api', href: '#' },
+        { nameKey: 'product.pricing', href: '#' },
+        { nameKey: 'product.enterprise', href: '#' }
       ]
     },
     support: {
-      title: 'Support',
+      titleKey: 'support.title',
       links: [
-        { name: 'Help Center', href: '#' },
-        { name: 'Technical Docs', href: '#' },
-        { name: 'Community Forum', href: '#' },
-        { name: 'Contact Us', href: '#' },
-        { name: 'Status Page', href: '#' }
+        { nameKey: 'support.help', href: '#' },
+        { nameKey: 'support.docs', href: '#' },
+        { nameKey: 'support.community', href: '#' },
+        { nameKey: 'support.contact', href: '#' },
+        { nameKey: 'support.status', href: '#' }
       ]
     },
     community: {
-      title: 'Community',
+      titleKey: 'communitySection.title',
       links: [
-        { name: 'User Gallery', href: '#' },
-        { name: 'Creative Challenges', href: '#' },
-        { name: 'Developers', href: '#' },
-        { name: 'Partners', href: '#' },
-        { name: 'News & Updates', href: '#' }
+        { nameKey: 'communitySection.gallery', href: '#' },
+        { nameKey: 'communitySection.challenges', href: '#' },
+        { nameKey: 'communitySection.developers', href: '#' },
+        { nameKey: 'communitySection.partners', href: '#' },
+        { nameKey: 'communitySection.news', href: '#' }
       ]
     },
     legal: {
-      title: 'Legal',
+      titleKey: 'legal.title',
       links: [
-        { name: 'Privacy Policy', href: '#' },
-        { name: 'Terms of Service', href: '#' },
-        { name: 'Copyright Notice', href: '#' },
-        { name: 'Cookie Policy', href: '#' },
-        { name: 'GDPR Compliance', href: '#' }
+        { nameKey: 'legal.privacy', href: '#' },
+        { nameKey: 'legal.terms', href: '#' },
+        { nameKey: 'legal.copyright', href: '#' },
+        { nameKey: 'legal.cookies', href: '#' },
+        { nameKey: 'legal.gdpr', href: '#' }
       ]
     }
   };
@@ -80,26 +83,26 @@ const Footer = () => {
               <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-xl">AI</span>
               </div>
-              <span className="text-2xl font-bold text-white">PhotoGen</span>
+              <span className="text-2xl font-bold text-white">{t('brandName')}</span>
             </div>
-            
+
             <p className="text-gray-400 text-lg leading-relaxed mb-6 max-w-md">
-              Generate instantly, imagine infinitely. Unleash your creativity with AI technology, bringing every inspiration to life.
+              {t('tagline')}
             </p>
 
             {/* 联系信息 */}
             <div className="space-y-3 mb-6">
               <div className="flex items-center space-x-3 text-gray-400">
                 <Mail className="w-5 h-5" />
-                <span>contact@aiphotogen.com</span>
+                <span>{t('contact.email')}</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <Phone className="w-5 h-5" />
-                <span>+86 400-123-4567</span>
+                <span>{t('contact.phone')}</span>
               </div>
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5" />
-                <span>Chaoyang Tech Park, Beijing</span>
+                <span>{t('contact.address')}</span>
               </div>
             </div>
 
@@ -128,7 +131,7 @@ const Footer = () => {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-white font-bold text-lg mb-6">{section.title}</h3>
+              <h3 className="text-white font-bold text-lg mb-6">{t(section.titleKey)}</h3>
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
@@ -137,7 +140,7 @@ const Footer = () => {
                       whileHover={{ x: 5 }}
                       className="text-gray-400 hover:text-white transition-colors duration-200 flex items-center group cursor-pointer"
                     >
-                      <span>{link.name}</span>
+                      <span>{t(link.nameKey)}</span>
                       <ArrowRight className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                     </motion.a>
                   </li>
@@ -157,16 +160,16 @@ const Footer = () => {
         >
           <div className="text-center max-w-2xl mx-auto">
             <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
-              Subscribe to Our Updates
+              {t('subscribe.title')}
             </h3>
             <p className="text-gray-300 text-lg mb-6">
-              Get the latest AI technology news, product updates, and exclusive offers
+              {t('subscribe.description')}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input
                 type="email"
-                placeholder="Enter your email address"
+                placeholder={t('subscribe.placeholder')}
                 className="flex-1 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-custom text-white placeholder-gray-400 border border-white/20 focus:outline-none focus:border-blue-500 transition-colors"
               />
               <motion.button
@@ -174,7 +177,7 @@ const Footer = () => {
                 whileTap={{ scale: 0.95 }}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 flex items-center justify-center space-x-2 cursor-pointer"
               >
-                <span>Subscribe</span>
+                <span>{t('subscribe.button')}</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
             </div>
@@ -194,11 +197,11 @@ const Footer = () => {
             className="text-gray-400 text-center md:text-left"
           >
             <p className="flex items-center space-x-2">
-              <span>© 2025 AI PhotoGen. All rights reserved.</span>
+              <span>{t('copyright')}</span>
               <span className="hidden md:inline">|</span>
-              <span className="hidden md:inline">Made with</span>
+              <span className="hidden md:inline">{t('madeWith')}</span>
               <Heart className="w-4 h-4 text-red-500 fill-current" />
-              <span className="hidden md:inline">in China</span>
+              <span className="hidden md:inline">{t('madeIn')}</span>
             </p>
           </motion.div>
 
@@ -211,10 +214,10 @@ const Footer = () => {
           >
             <div className="flex items-center space-x-2 text-gray-400">
               <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span>4.9/5 User Rating</span>
+              <span>4.9/5 {t('userRating')}</span>
             </div>
             <div className="text-gray-400">
-              <span>50,000+ Satisfied Users</span>
+              <span>50,000+ {t('satisfiedUsers')}</span>
             </div>
           </motion.div>
         </div>

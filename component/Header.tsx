@@ -4,11 +4,17 @@ import { useState, useEffect } from "react";
 // Framer Motion: 提供高级动画功能
 import { motion } from "framer-motion";
 // Lucide React: 轻量级图标库
-import { Menu, X, Globe, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 // NextAuth
 import { useSession, signIn, signOut } from "next-auth/react";
 // Next.js Image
 import Image from "next/image";
+// Next.js Link
+import Link from "next/link";
+// next-intl
+import { useTranslations } from 'next-intl';
+// Language Switcher
+import LanguageSwitcher from './LanguageSwitcher';
 
 
 /**
@@ -22,6 +28,9 @@ const Header = () => {
 
   // NextAuth session
   const { data: session, status } = useSession();
+
+  // Translations
+  const t = useTranslations('nav');
 
   // 使用useEffect添加滚动事件监听器
   useEffect(() => {
@@ -42,7 +51,11 @@ const Header = () => {
 
 
   // 导航菜单项数组
-  const navItems = ["Product", "Pricing", "Docs"];
+  const navItems = [
+    { key: 'create', label: t('create'), href: '/edit-image' },
+    { key: 'myCreations', label: t('myCreations'), href: '#' },
+    { key: 'pricing', label: t('pricing'), href: '#' }
+  ];
 
   return (
 
@@ -50,7 +63,7 @@ const Header = () => {
     <motion.header
       // 初始状态和动画设置
       initial={{ y: -100 }}
-      animate={{ y: 20 }}
+      animate={{ y: 0 }}
       // 根据滚动状态动态改变样式
       className={`fixed top-0 w-full z-40 transition-all duration-300 ${
         isScrolled
@@ -60,30 +73,32 @@ const Header = () => {
     >
 
       {/* 导航栏内容容器 */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 border-b border-white/10">
         {/* 导航栏主体布局 */}
-        <div className="flex items-center justify-between space-x-12">
+        <div className="flex items-center justify-between space-x-4 sm:space-x-12">
           {/* Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05 }} // 鼠标悬停时轻微放大
-            className="flex items-center space-x-2"
-          >
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">AI</span>
-            </div>
-            <span className="text-white text-2xl font-bold">AI Art Studio</span>
-          </motion.div>
+          <Link href="/">
+            <motion.div
+              whileHover={{ scale: 1.05 }} // 鼠标悬停时轻微放大
+              className="flex items-center space-x-2 cursor-pointer"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">AI</span>
+              </div>
+              <span className="text-white text-xl sm:text-2xl font-bold">AI Art Studio</span>
+            </motion.div>
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-12">
+          <nav className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <motion.a
-                key={item}
-                href="#"
+                key={item.key}
+                href={item.href}
                 className="text-white hover:text-blue-300 transition-colors duration-200 relative group text-xl cursor-pointer"
                 whileHover={{ y: -2 }}
               >
-                {item}
+                {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 group-hover:w-full transition-all duration-300"></span>
               </motion.a>
 
@@ -91,39 +106,9 @@ const Header = () => {
           </nav>
 
           {/* 右边部分 */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             {/* 语言选择 */}
-            <motion.div whileHover={{ scale: 1.05 }} className="relative group">
-
-              <button className="flex items-center space-x-1 text-white hover:text-blue-300 transition-colors text-xl cursor-pointer">
-                <Globe className="w-4 h-4" />
-                <span>EN</span>
-              </button>
-{/* 一个隐藏在父元素下方、右对齐的下拉菜单容器，平时不可见，当用户悬停在父元素上时，会以淡入方式平滑显示出来。 */}
-              <div className="absolute top-full right-0 mt-2 w-32 bg-black/90 backdrop-blur-custom rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-
-                <div className="py-2">
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
-                  >
-                    中文
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
-                  >
-                    日本語
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-white hover:bg-white/10 cursor-pointer"
-                  >
-                    한국어
-                  </a>
-                </div>
-              </div>
-            </motion.div>
+            <LanguageSwitcher />
 
             {/* 用户认证区域 */}
             {status === "loading" ? (
@@ -162,7 +147,7 @@ const Header = () => {
                       className="flex items-center space-x-2 w-full px-4 py-2 text-white hover:bg-white/10 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>log out</span>
+                      <span>{t('logout')}</span>
                     </button>
                   </div>
                 </div>
@@ -172,25 +157,59 @@ const Header = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => signIn('google')}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
-                <span>log in</span>
+                <span>{t('login')}</span>
               </motion.button>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-white cursor-pointer"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
+          {/* Mobile: Language + User Avatar + Menu Button */}
+          <div className="flex lg:hidden items-center space-x-3">
+            {/* 移动端语言选择 */}
+            <LanguageSwitcher />
+
+            {/* 移动端用户头像 */}
+            {status === "loading" ? (
+              <div className="w-8 h-8 bg-gray-600 rounded-full animate-pulse"></div>
+            ) : session ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20">
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User avatar"}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
             ) : (
-              <Menu className="w-6 h-6" />
+              <button
+                onClick={() => signIn('google')}
+                className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
+              >
+                <LogIn className="w-4 h-4 text-white" />
+              </button>
             )}
-          </button>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="text-white cursor-pointer hover:text-blue-300 transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -200,72 +219,36 @@ const Header = () => {
             opacity: isMobileMenuOpen ? 1 : 0,
             height: isMobileMenuOpen ? "auto" : 0,
           }}
-          className="md:hidden overflow-hidden"
+          className="lg:hidden overflow-hidden"
         >
           <div className="py-4 space-y-4">
+            {/* 导航菜单项 */}
             {navItems.map((item) => (
               <a
-                key={item}
-                href="#"
+                key={item.key}
+                href={item.href}
                 className="block text-white hover:text-blue-300 transition-colors cursor-pointer"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {item}
+                {item.label}
               </a>
             ))}
 
-            {/* 移动端用户认证区域 */}
-            <div className="border-t border-gray-700 pt-4 mt-4">
-              {status === "loading" ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-600 rounded-full animate-pulse"></div>
-                  <span className="text-white">加载中...</span>
-                </div>
-              ) : session ? (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 text-white">
-                    {session.user?.image ? (
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20">
-                        <Image
-                          src={session.user.image}
-                          alt={session.user.name || "User avatar"}
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <User className="w-5 h-5" />
-                    )}
-                    <div>
-                      <p className="font-medium">{session.user?.name}</p>
-                      <p className="text-sm text-gray-400">{session.user?.email}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center space-x-2 w-full text-left text-white hover:text-red-300 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>退出登录</span>
-                  </button>
-                </div>
-              ) : (
+            {/* 移动端用户认证区域 - 仅显示登出按钮 */}
+            {session && (
+              <div className="border-t border-gray-700 pt-4 mt-4">
                 <button
                   onClick={() => {
-                    signIn('google');
+                    signOut();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="flex items-center space-x-2 w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg transition-all duration-300"
+                  className="flex items-center space-x-2 w-full text-left text-white hover:text-red-300 transition-colors cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>登录</span>
+                  <LogOut className="w-4 h-4" />
+                  <span>{t('logout')}</span>
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

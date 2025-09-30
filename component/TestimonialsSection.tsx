@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Star, Quote, ChevronLeft, ChevronRight, ThumbsUp, Heart } from 'lucide-react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 const TestimonialsSection = () => {
+  const t = useTranslations('testimonials');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -105,10 +107,10 @@ const TestimonialsSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            User Experience
+            {t('title')}
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Listen to real feedback from users worldwide and learn how AI image generation is changing their creative process
+            {t('subtitle')}
           </p>
         </motion.div>
 
@@ -183,7 +185,7 @@ const TestimonialsSection = () => {
                   <h3 className="text-xl font-bold text-white">{currentUser.name}</h3>
                   {currentUser.verified && (
                     <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      Verified
+                      {t('verified')}
                     </div>
                   )}
                 </div>
@@ -197,7 +199,7 @@ const TestimonialsSection = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Heart className="w-4 h-4" />
-                    <span>Like</span>
+                    <span>{t('like')}</span>
                   </div>
                 </div>
               </div>
@@ -252,7 +254,7 @@ const TestimonialsSection = () => {
                     : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
                 }`}
               >
-                {isAutoPlaying ? 'Pause Slideshow' : 'Start Slideshow'}
+                {isAutoPlaying ? t('pauseSlideshow') : t('startSlideshow')}
               </button>
             </div>
           </div>
@@ -267,9 +269,9 @@ const TestimonialsSection = () => {
           className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16"
         >
           {[
-            { label: 'Satisfied Users', value: '50,000+', icon: '👥' },
-            { label: 'Generated Images', value: '1M+', icon: '🎨' },
-            { label: 'Average Rating', value: '4.9/5', icon: '⭐' }
+            { labelKey: 'users', value: '50,000+', icon: '👥' },
+            { labelKey: 'images', value: '1M+', icon: '🎨' },
+            { labelKey: 'rating', value: '4.9/5', icon: '⭐' }
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -281,7 +283,7 @@ const TestimonialsSection = () => {
             >
               <div className="text-4xl mb-2">{stat.icon}</div>
               <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-              <div className="text-gray-400">{stat.label}</div>
+              <div className="text-gray-400">{t(`stats.${stat.labelKey}`)}</div>
             </motion.div>
           ))}
         </motion.div>
