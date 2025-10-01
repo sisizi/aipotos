@@ -151,7 +151,12 @@
     "taskWillTimeout": "任务将在 {seconds} 秒后超时...",
     "taskTimeoutMarking": "任务处理超时，正在自动标记为失败...",
     "imageSizeLimit": "图片大小不能超过10MB",
-    "imageCountLimit": "最多只能上传5张图片"
+    "imageCountLimit": "最多只能上传5张图片",
+    "partialUploadFailed": "部分图片上传失败：{errors}",
+    "networkError": "网络错误",
+    "unknownError": "未知错误",
+    "uploadError": "上传错误",
+    "taskCreationFailed": "任务创建失败"
   },
   "footer": {
     "brandName": "图生AI",

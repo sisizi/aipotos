@@ -4,12 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Copy, Sparkles, Download, Share2, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { useToast } from './ToastProvider';
 
 /**
  * 图像编辑组件 - 提供图片上传、编辑和生成的功能界面
  */
 const ImageEditorSection = () => {
   const t = useTranslations('imageEditor');
+  const { showToast } = useToast();
 
   // 状态管理
   const [selectedTab, setSelectedTab] = useState<'edit' | 'create'>('edit');
@@ -61,7 +63,7 @@ const ImageEditorSection = () => {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || !userId) {
-      if (!userId) alert(t('initializingUser'));
+      if (!userId) showToast(t('initializingUser'), 'error');
       return;
     }
 
@@ -71,11 +73,11 @@ const ImageEditorSection = () => {
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       if (file.size > 10 * 1024 * 1024) {
-        alert(t('imageSizeLimit'));
+        showToast(t('imageSizeLimit'), 'error');
         return;
       }
       if (initialImageCount + filesToUpload.length > 5) {
-        alert(t('imageCountLimit'));
+        showToast(t('imageCountLimit'), 'error');
         return;
       }
     }
@@ -180,7 +182,7 @@ const ImageEditorSection = () => {
                 setIsGenerating(false);
                 setCurrentTaskId(null);
                 setTaskStartTime(null);
-                alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
+                showToast(t('taskFailed', { error: task.error_message || 'Unknown error' }), 'error');
                 return;
               }
             }
@@ -208,7 +210,7 @@ const ImageEditorSection = () => {
               setIsGenerating(false);
               setCurrentTaskId(null);
               setTaskStartTime(null);
-              alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
+              showToast(t('taskFailed', { error: task.error_message || 'Unknown error' }), 'error');
               return;
             }
           }
@@ -221,7 +223,7 @@ const ImageEditorSection = () => {
           setIsGenerating(false);
           setCurrentTaskId(null);
           setTaskStartTime(null);
-          alert(t('taskTimeout'));
+          showToast(t('taskTimeout'), 'error');
         }
       } catch (error) {
         if (checkCount < maxChecks && isPollingActive) {
@@ -236,20 +238,20 @@ const ImageEditorSection = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || !userId) {
       if (!userId) {
-        alert(t('initializingUser'));
+        showToast(t('initializingUser'), 'error');
       } else {
-        alert(t('enterDescription'));
+        showToast(t('enterDescription'), 'error');
       }
       return;
     }
 
     if (selectedTab === 'edit' && uploadedImages.length === 0) {
-      alert(t('editModeRequiresImages'));
+      showToast(t('editModeRequiresImages'), 'error');
       return;
     }
 
     if (selectedTab === 'edit' && selectedImageIndices.length === 0) {
-      alert(t('selectImages'));
+      showToast(t('selectImages'), 'error');
       return;
     }
 
@@ -286,18 +288,18 @@ const ImageEditorSection = () => {
         if (result.success && result.data && result.data.taskId) {
           startSimplePolling(result.data.taskId);
         } else {
-          alert(t('taskFailed', { error: result.error || 'Unknown error' }));
+          showToast(t('taskFailed', { error: result.error || 'Unknown error' }), 'error');
           setIsGenerating(false);
           setTaskStartTime(null);
         }
       } else {
         const errorText = await response.text();
-        alert(t('taskFailed', { error: errorText }));
+        showToast(t('taskFailed', { error: errorText }), 'error');
         setIsGenerating(false);
         setTaskStartTime(null);
       }
     } catch (error) {
-      alert(t('taskFailed', { error: error instanceof Error ? error.message : 'Network error' }));
+      showToast(t('taskFailed', { error: error instanceof Error ? error.message : 'Network error' }), 'error');
       setIsGenerating(false);
       setTaskStartTime(null);
     }
@@ -309,7 +311,7 @@ const ImageEditorSection = () => {
 
   const downloadGeneratedImage = async () => {
     if (!generatedImage) {
-      alert(t('noImageToDownload'));
+      showToast(t('noImageToDownload'), 'error');
       return;
     }
     try {
@@ -323,7 +325,7 @@ const ImageEditorSection = () => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      alert(t('downloadFailed'));
+      showToast(t('downloadFailed'), 'error');
     }
   };
 

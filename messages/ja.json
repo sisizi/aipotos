@@ -151,7 +151,12 @@
     "taskWillTimeout": "{seconds}秒後にタスクがタイムアウトします...",
     "taskTimeoutMarking": "タスクタイムアウト、失敗としてマーク中...",
     "imageSizeLimit": "画像サイズは10MBを超えることはできません",
-    "imageCountLimit": "最大5枚の画像のみ許可されています"
+    "imageCountLimit": "最大5枚の画像のみ許可されています",
+    "partialUploadFailed": "一部の画像のアップロードに失敗しました：{errors}",
+    "networkError": "ネットワークエラー",
+    "unknownError": "不明なエラー",
+    "uploadError": "アップロードエラー",
+    "taskCreationFailed": "タスク作成失敗"
   },
   "footer": {
     "brandName": "PhotoGen",

@@ -151,7 +151,12 @@
     "taskWillTimeout": "{seconds}초 후 작업이 시간 초과됩니다...",
     "taskTimeoutMarking": "작업 시간 초과, 실패로 표시 중...",
     "imageSizeLimit": "이미지 크기는 10MB를 초과할 수 없습니다",
-    "imageCountLimit": "최대 5개 이미지만 허용됩니다"
+    "imageCountLimit": "최대 5개 이미지만 허용됩니다",
+    "partialUploadFailed": "일부 이미지 업로드 실패: {errors}",
+    "networkError": "네트워크 오류",
+    "unknownError": "알 수 없는 오류",
+    "uploadError": "업로드 오류",
+    "taskCreationFailed": "작업 생성 실패"
   },
   "footer": {
     "brandName": "PhotoGen",

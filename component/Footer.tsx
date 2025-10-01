@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { usePathname, useRouter } from '@/i18n/routing';
 import {
   Twitter,
   Linkedin,
@@ -9,35 +10,27 @@ import {
   Mail,
   Phone,
   MapPin,
-  ArrowRight,
-  Heart,
-  Star
+  ArrowRight
 } from 'lucide-react';
 
 const Footer = () => {
   const t = useTranslations('footer');
+  const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
+
+  const languages = [
+    { code: 'en', label: 'English' },
+    { code: 'zh', label: '中文' },
+    { code: 'ko', label: '한국어' },
+    { code: 'ja', label: '日本語' }
+  ];
+
+  const handleLanguageChange = (langCode: string) => {
+    router.replace(pathname, { locale: langCode });
+  };
 
   const footerLinks = {
-    product: {
-      titleKey: 'product.title',
-      links: [
-        { nameKey: 'product.aiGeneration', href: '#' },
-        { nameKey: 'product.batch', href: '#' },
-        { nameKey: 'product.api', href: '#' },
-        { nameKey: 'product.pricing', href: '#' },
-        { nameKey: 'product.enterprise', href: '#' }
-      ]
-    },
-    support: {
-      titleKey: 'support.title',
-      links: [
-        { nameKey: 'support.help', href: '#' },
-        { nameKey: 'support.docs', href: '#' },
-        { nameKey: 'support.community', href: '#' },
-        { nameKey: 'support.contact', href: '#' },
-        { nameKey: 'support.status', href: '#' }
-      ]
-    },
     community: {
       titleKey: 'communitySection.title',
       links: [
@@ -70,7 +63,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-b from-black/50 to-black/90 backdrop-blur-custom">
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* 主要内容区域 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* 品牌信息 */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -95,14 +88,6 @@ const Footer = () => {
               <div className="flex items-center space-x-3 text-gray-400">
                 <Mail className="w-5 h-5" />
                 <span>{t('contact.email')}</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-400">
-                <Phone className="w-5 h-5" />
-                <span>{t('contact.phone')}</span>
-              </div>
-              <div className="flex items-center space-x-3 text-gray-400">
-                <MapPin className="w-5 h-5" />
-                <span>{t('contact.address')}</span>
               </div>
             </div>
 
@@ -151,7 +136,7 @@ const Footer = () => {
         </div>
 
         {/* 订阅区域 */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -182,45 +167,33 @@ const Footer = () => {
               </motion.button>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* 分割线 */}
         <div className="border-t border-white/10 mb-8"></div>
 
-        {/* 底部信息 */}
-        <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-gray-400 text-center md:text-left"
-          >
-            <p className="flex items-center space-x-2">
-              <span>{t('copyright')}</span>
-              <span className="hidden md:inline">|</span>
-              <span className="hidden md:inline">{t('madeWith')}</span>
-              <Heart className="w-4 h-4 text-red-500 fill-current" />
-              <span className="hidden md:inline">{t('madeIn')}</span>
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="flex items-center space-x-6"
-          >
-            <div className="flex items-center space-x-2 text-gray-400">
-              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-              <span>4.9/5 {t('userRating')}</span>
-            </div>
-            <div className="text-gray-400">
-              <span>50,000+ {t('satisfiedUsers')}</span>
-            </div>
-          </motion.div>
-        </div>
+        {/* 底部语言切换 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="flex items-center justify-center"
+        >
+          <div className="flex items-center space-x-6">
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => handleLanguageChange(lang.code)}
+                className={`transition-colors duration-200 cursor-pointer ${
+                  locale === lang.code ? 'text-white font-semibold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
 
         {/* 装饰性元素 */}
         {/* <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div> */}

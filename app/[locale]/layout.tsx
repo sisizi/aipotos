@@ -4,6 +4,7 @@ import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
+import {ToastProvider} from '@/component/ToastProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,7 +54,9 @@ export default async function LocaleLayout({
       >
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </Providers>
         </NextIntlClientProvider>
       </body>

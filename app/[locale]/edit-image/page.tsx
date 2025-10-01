@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import MouseParticles from '@/component/MouseParticles';
 import Header from '@/component/Header';
+import { useToast } from '@/component/ToastProvider';
 
 /**
  * 编辑图片页面组件 - 支持异步任务处理
@@ -14,6 +15,7 @@ import Header from '@/component/Header';
  */
 const EditImagePage = () => {
   const t = useTranslations('imageEditor');
+  const { showToast } = useToast();
 
   // 状态管理
   const [selectedTab, setSelectedTab] = useState<'edit' | 'create'>('edit'); // 当前选中的标签页（编辑或创建）
@@ -76,7 +78,7 @@ const EditImagePage = () => {
     const files = event.target.files;
     if (!files || !userId) {
       if (!userId) {
-        alert(t('initializingUser'));
+        showToast(t('initializingUser'), 'error');
       }
       return;
     }
@@ -88,11 +90,11 @@ const EditImagePage = () => {
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       if (file.size > 10 * 1024 * 1024) {
-        alert(t('imageSizeLimit'));
+        showToast(t('imageSizeLimit'), 'error');
         return;
       }
       if (initialImageCount + filesToUpload.length > 5) {
-        alert(t('imageCountLimit'));
+        showToast(t('imageCountLimit'), 'error');
         return;
       }
     }
@@ -141,12 +143,12 @@ const EditImagePage = () => {
           if (result.success && result.data) {
             return { success: true, url: result.data.url, index };
           } else {
-            console.error('上传失败:', result.error || '未知错误');
-            return { success: false, error: result.error || '未知错误' };
+            console.error('Upload failed:', result.error || t('unknownError'));
+            return { success: false, error: result.error || t('unknownError') };
           }
         } else {
           const errorText = await response.text();
-          console.error('上传失败:', errorText);
+          console.error('Upload failed:', errorText);
           return { success: false, error: errorText };
         }
       } catch (error) {
@@ -156,8 +158,8 @@ const EditImagePage = () => {
           newSet.delete(currentSlotIndex);
           return newSet;
         });
-        console.error('上传错误:', error);
-        return { success: false, error: error instanceof Error ? error.message : '网络错误' };
+        console.error(t('uploadError'), error);
+        return { success: false, error: error instanceof Error ? error.message : t('networkError') };
       }
     });
 
@@ -174,7 +176,7 @@ const EditImagePage = () => {
 
       if (failedUploads.length > 0) {
         const errorMessages = failedUploads.map(result => result.error).join(', ');
-        alert(`部分图片上传失败: ${errorMessages}`);
+        showToast(t('partialUploadFailed', { errors: errorMessages }), 'error');
       }
 
       if (successfulUploads.length > 0) {
@@ -248,7 +250,7 @@ const EditImagePage = () => {
                 setTaskStartTime(null);
                 setTaskProgress(0);
                 setTaskMessage('');
-                alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
+                showToast(t('taskFailed', { error: task.error_message || 'Unknown error' }), 'error');
                 return;
               }
             }
@@ -286,7 +288,7 @@ const EditImagePage = () => {
               setTaskStartTime(null);
               setTaskProgress(0);
               setTaskMessage('');
-              alert(t('taskFailed', { error: task.error_message || 'Unknown error' }));
+              showToast(t('taskFailed', { error: task.error_message || 'Unknown error' }), 'error');
               return;
             }
             // 如果状态是 'processing' 或其他，继续轮询
@@ -304,7 +306,7 @@ const EditImagePage = () => {
           setTaskStartTime(null);
           setTaskProgress(0);
           setTaskMessage('');
-          alert(t('taskTimeout'));
+          showToast(t('taskTimeout'), 'error');
         }
 
       } catch (error) {
@@ -326,21 +328,21 @@ const EditImagePage = () => {
   const handleGenerate = async () => {
     if (!prompt.trim() || !userId) {
       if (!userId) {
-        alert(t('initializingUser'));
+        showToast(t('initializingUser'), 'error');
       } else {
-        alert(t('enterDescription'));
+        showToast(t('enterDescription'), 'error');
       }
       return;
     }
 
     // 编辑模式下需要确保有选中的图片
     if (selectedTab === 'edit' && uploadedImages.length === 0) {
-      alert(t('editModeRequiresImages'));
+      showToast(t('editModeRequiresImages'), 'error');
       return;
     }
 
     if (selectedTab === 'edit' && selectedImageIndices.length === 0) {
-      alert(t('selectImages'));
+      showToast(t('selectImages'), 'error');
       return;
     }
 
@@ -372,7 +374,7 @@ const EditImagePage = () => {
 
       const apiEndpoint = isEditMode ? '/api/ai/edit' : '/api/ai/generate';
 
-      console.log('创建异步任务:', apiEndpoint, {
+      console.log('Creating async task:',  apiEndpoint, {
         ...requestBody,
         inputImages: requestBody.inputImages ? `[${requestBody.inputImages.length} IMAGE URLs]` : undefined
       });
@@ -388,25 +390,25 @@ const EditImagePage = () => {
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data && result.data.taskId) {
-          console.log('任务创建成功:', result.data.taskId);
+          console.log('Task created successfully:',  result.data.taskId);
           // 启动简化轮询检查数据库
           startSimplePolling(result.data.taskId);
         } else {
-          console.error('任务创建失败:', result.error || '未知错误');
-          alert(t('taskFailed', { error: result.error || 'Unknown error' }));
+          console.error('Task creation failed:', result.error || 'Unknown error');
+          showToast(t('taskFailed', { error: result.error || 'Unknown error' }), 'error');
           setIsGenerating(false);
           setTaskStartTime(null);
         }
       } else {
         const errorText = await response.text();
-        console.error('任务创建失败:', errorText);
-        alert(t('taskFailed', { error: errorText }));
+        console.error('Task creation failed:', errorText);
+        showToast(t('taskFailed', { error: errorText }), 'error');
         setIsGenerating(false);
         setTaskStartTime(null);
       }
     } catch (error) {
-      console.error('任务创建失败:', error);
-      alert(t('taskFailed', { error: error instanceof Error ? error.message : 'Network error' }));
+      console.error('Task creation failed:', error);
+      showToast(t('taskFailed', { error: error instanceof Error ? error.message : 'Network error' }), 'error');
       setIsGenerating(false);
       setTaskStartTime(null);
     }
@@ -419,7 +421,7 @@ const EditImagePage = () => {
   // 下载生成的图片
   const downloadGeneratedImage = async () => {
     if (!generatedImage) {
-      alert(t('noImageToDownload'));
+      showToast(t('noImageToDownload'), 'error');
       return;
     }
 
@@ -438,11 +440,11 @@ const EditImagePage = () => {
       link.click();
       document.body.removeChild(link);
 
-      console.log('下载开始:', filename);
+      console.log('Download started:',  filename);
 
     } catch (error) {
-      console.error('下载失败:', error);
-      alert(t('downloadFailed'));
+      console.error('Download failed:', error);
+      showToast(t('downloadFailed'), 'error');
     }
   };
 
